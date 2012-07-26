@@ -360,7 +360,13 @@ AppStorage.prototype = {
         if (this.db.state != 'connected') throw 'db not connected';
 
         var collection = this.getResourceCollection(appId, objectTypeName);
-        var instance_id = this.ObjectID.createFromHexString(instance._id);
+        var instance_id = this.createIdObject(instance._id);
+        if (instance_id == null) {
+            if (typeof callback == 'function')
+                callback(null);
+            return;
+        }
+
         delete instance['_id'];
 
         collection.findAndModify({_id:instance_id}, {}, instance, {safe:true, 'new':true}, function (err, saved) {
@@ -375,11 +381,27 @@ AppStorage.prototype = {
         });
     },
 
+    createIdObject: function(id) {
+        try {
+            return this.ObjectID.createFromHexString(id);
+        } catch (e ) {
+            console.log(e);
+           return null;
+        }
+    },
+
+
     getObjectInstance:function (appId, objectTypeName, instanceId, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
+
         var collection = this.getResourceCollection(appId, objectTypeName);
-        var instance_id = this.ObjectID.createFromHexString(instanceId);
+        var instance_id = this.createIdObject(instanceId);
+        if (instance_id == null) {
+            if (typeof callback == 'function')
+            callback(null);
+            return;
+        }
         collection.find({_id:instance_id}, function (err, cursor) {
             if (err != null) {
                 throw err;
@@ -417,7 +439,13 @@ AppStorage.prototype = {
         if (this.db.state != 'connected') throw 'db not connected';
 
         var collection = this.getResourceCollection(appId, objectTypeName);
-        var instance_id = this.ObjectID.createFromHexString(instanceId);
+        var instance_id = this.createIdObject(instanceId);
+        if (instance_id == null) {
+            if (typeof callback == 'function')
+                callback();
+            return;
+        }
+
         collection.remove({_id:instance_id}, function (err, cursor) {
             if (err != null) {
                 throw err;
