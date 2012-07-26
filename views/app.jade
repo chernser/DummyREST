@@ -1,0 +1,40 @@
+
+
+div.span12
+    div.row
+        div.span10
+            h2= app.name
+    div.row#view
+        div.span2
+            div.well
+                ul.nav.nav-list
+                    li(class=(sub_view == 'objects') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/objects/'
+                        a(href=appLink) Objects
+                    li(class=(sub_view == 'testsuites') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/testsuites/'
+                        a(href=appLink) Test Suites
+            div.well.control-group
+                p
+                    button.btn.btn-primary#startAppBtn Start
+                    button.btn.btn-danger(disabled="true")#stopAppBtn Stop
+                    p
+                        a(href="http://:8100/api/", target="new")#rootAppApiLink
+                p.form-inline
+                    label.checkbox
+                        input(type="checkbox")#routesArePublished
+                        | Routes Published
+
+                p
+                    button.btn.btn-danger.btn-small#deleteAppBtn Delete
+        div.span7
+            - if (sub_view == 'objects')
+                include app.objects.jade
+            - else if (sub_view == 'testsuites')
+                include app.testsuites.jade
+            - else
+                h1 Please select category
+
+    script(type='text/javascript')
+        var applicationId = #{app.id};
+    script(type='text/javascript', src='/javascripts/app/views/app.view.js')

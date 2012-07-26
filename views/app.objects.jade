@@ -1,0 +1,46 @@
+
+div.row
+    div.span2
+        div
+            button.btn.btn-primary.btn-mini#newObjectType New Object Type
+            div.form.well#newObjectFrm
+                fieldset
+                    label(for="objectName") Name
+                    input(style="width:110px;")#newObjectTypeName(type="text") newObject
+                button.btn#createObjectType create
+                button.btn#cancelNewObjectType cancel
+            ul.nav.nav-list
+                li
+
+                li.nav-header Objects Types
+                each objtype in app.objtypes
+                    li(class=(objtype.selected ? 'active': ''))
+                        a.objtypelnk(href="#", obj=objtype.name) #{objtype.name}
+    div.span4
+        div.row
+            div.span3
+                h3#objNameHeader Object Type "<i></i>"
+                button.btn.btn-danger.btn-mini#deleteObjectType delete
+        div.row
+            div.span4
+                button.btn.btn-primary.btn-mini#showProxyCode show proxy code
+                div.form#objectTypeProxyCodeFrm
+                    textarea.span4(disabled="true", rows=5)#objectTypeProxyCode
+                    button.btn.btn-mini#editProxyCode edit
+                    button.btn.btn-mini(disabled="true")#saveProxyCode save
+                    span.inline-help(style="color: red;margin-left: 10px")#proxyCodeError
+        div.row
+            div.span4
+                h4(style="margin-top:10px") Instances
+                table#objectInstances
+                div.btn-group
+                    button.btn#editObjectBtn edit
+                    button.btn#removeObjectBtn remove
+                hr
+                div.form
+                    label Object Definition
+                    textarea.span4(rows="10")#objectInstanceJSON
+                    div.btn-group
+                        button.btn#createObjectInstance Create
+                        button.btn#saveObjectInstance Save
+                    span.inline-help(style="color: red;margin-left: 10px")#objectInstanceDefinitionError
