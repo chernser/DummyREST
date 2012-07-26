@@ -268,6 +268,6 @@ app.delete('/api/app/:appId/:objType/:id', function (req, res) {
 
 
 
-app.listen(3000, function () {
+app.listen(8100, function () {
     console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
