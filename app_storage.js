@@ -39,8 +39,7 @@ function getNextAppResId(db, appId, callback) {
 
 function AppStorage(callback) {
     // Imports
-    var mongo_db = require("mongodb"),
-        Fiber = require('fibers');
+    var mongo_db = require("mongodb");
 
     this.ObjectID = mongo_db.ObjectID;
 
