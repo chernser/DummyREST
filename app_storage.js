@@ -351,7 +351,7 @@ AppStorage.prototype = {
             }
 
             if (typeof callback == 'function') {
-                callback(object)
+                callback(object[0])
             }
         });
     },
@@ -438,7 +438,7 @@ AppStorage.prototype = {
     deleteObjectInstance:function (appId, objectTypeId, instanceId, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
-        var collection = this.getResourceCollection(appId, objectTypeName);
+        var collection = this.getResourceCollection(appId, objectTypeId);
         var instance_id = this.createIdObject(instanceId);
         if (instance_id == null) {
             if (typeof callback == 'function')

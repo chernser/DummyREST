@@ -58,9 +58,20 @@ app.get('/app/:id/:subject?', routes.application);
 
 
 // API
-function createResourceGetter(res) {
+function createResourceGetter(res, notify, app_id) {
     return function (resource) {
+        if (typeof app_id != 'undefined') {
+            if (notify == 'updated') {
+                ApplicationController.notifyResourceChanged(app_id, resource);
+            }
+
+            if (notify == 'created') {
+                ApplicationController.notifyResourceCreated(app_id, resource);
+            }
+        }
+
         res.json(resource);
+
     }
 }
 
@@ -145,8 +156,29 @@ var ApplicationController = {
         }
         application.routes_are_published = newState;
         return application;
-    }
+    },
 
+    notifyResourceChanged:function (app_id, resource) {
+        var api = this.getApi(app_id);
+        if (api != null) {
+            api.notifyResourceChanged(resource);
+        }
+    },
+
+    notifyResourceCreated:function (app_id, resource) {
+        var api = this.getApi(app_id);
+        if (api != null) {
+            api.notifyResourceCreated(resource);
+        }
+    },
+
+
+    notifyResourceDeleted:function (app_id, resource) {
+        var api = this.getApi(app_id);
+        if (api != null) {
+            api.notifyResourceDeleted(resource);
+        }
+    }
 };
 
 
@@ -237,7 +269,8 @@ app.delete('/api/app/:appId/objtype/:objType', function (req, res) {
 // Object type instances
 app.post('/api/app/:appId/:objType/', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-        app_storage.addObjectInstace(req.params.appId, objectType.name, req.body, createResourceGetter(res));
+        var getter = createResourceGetter(res, 'created', req.params.appId);
+        app_storage.addObjectInstace(req.params.appId, objectType.name, req.body, getter);
     });
 });
 
@@ -254,18 +287,20 @@ app.get('/api/app/:appId/:objType/:id?', function (req, res) {
 
 app.put('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-        app_storage.saveObjectInstance(req.params.appId, objectType.name, req.body, createResourceGetter(res));
+        var getter = createResourceGetter(res, 'updated', req.params.appId);
+        app_storage.saveObjectInstance(req.params.appId, objectType.name, req.body, getter);
     });
 });
 
 app.delete('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
+
         app_storage.deleteObjectInstance(req.params.appId, objectType.name, req.params.id, function() {
+            ApplicationController.notifyResourceDeleted(req.params.appId, {_id: req.params.id});
             res.send(200);
         });
     });
 });
-
 
 
 app.listen(8100, function () {

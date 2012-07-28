@@ -29,6 +29,7 @@ AppApi.prototype.init = function () {
     var express = require('express')
         , routes = require('./routes')
         , app_storage = require('./app_storage.js')()
+        , socket_io = require('socket.io')
         , api = this;
 
 
@@ -60,6 +61,16 @@ AppApi.prototype.init = function () {
 
 
     var app_id = this.app_id;
+    // Socket.IO
+    this.socket_io_port = 10100 + app_id;
+    this.io = socket_io.listen(this.socket_io_port);
+
+    this.io.on('connection', function(socket) {
+        api.socket = socket;
+    });
+
+
+    // Express.JS
     app.get('/api/', function (req, res) {
         app_storage.getApplication(app_id, function (application) {
 
@@ -128,6 +139,18 @@ AppApi.prototype.init = function () {
             }
         });
     });
+
+    app.get('/', function (req, res) {
+        res.render('app_index', {title: 'Application ' + app_id});
+
+    });
+
+
+    console.log("socket.io port: ", this.socket_io_port);
+    app.get('/socket_test/', function (req, res) {
+        res.render('socket_io_test', { title: 'Application ' + app_id,
+            app_id: app_id, socket_io_port: api.socket_io_port});
+    });
 };
 
 
@@ -190,7 +213,9 @@ AppApi.prototype.handlePut = function(resource, instance, callback) {
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
         api.app_storage.saveObjectInstance(api.app_id, objectType.name, instance, function(saved) {
-            callback(null, proxy(saved));
+            var resource = proxy(saved);
+            api.notifyResourceChanged(saved);
+            callback(null, resource);
         });
     });
 };
@@ -374,4 +399,22 @@ AppApi.prototype.unpublish_routes = function () {
             contentType:'application/json'
         });
     });
+};
+
+
+
+AppApi.prototype.send_event = function(eventName, eventData) {
+    this.socket.emit(eventName, eventData);
+};
+
+AppApi.prototype.notifyResourceChanged = function(resource) {
+  this.send_event('resource_updated', resource);
+};
+
+AppApi.prototype.notifyResourceCreated = function(resource) {
+    this.send_event('resource_created', resource);
+};
+
+AppApi.prototype.notifyResourceDeleted = function(resource) {
+    this.send_event('resource_deleted', resource);
 };
