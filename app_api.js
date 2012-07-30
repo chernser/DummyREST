@@ -423,7 +423,12 @@ function getNotifyProxy(application) {
 AppApi.prototype.send_event = function(eventName, eventData) {
     var api = this;
 
+    if (typeof api.socket == 'undefined') {
+        console.log("Socket is not yet initialized");
+        return;
+    }
     api.app_storage.getApplication(api.app_id, function(application) {
+
         var proxy = getNotifyProxy(application);
         var event = proxy({name: eventName, type: 'event'}, eventData);
 
