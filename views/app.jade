@@ -1,5 +1,6 @@
 
-
+script(type='text/javascript')
+    var applicationId = #{app.id};
 div.span12
     div.row
         div.span10
@@ -14,6 +15,9 @@ div.span12
                     li(class=(sub_view == 'testsuites') ? 'active' : '')
                         - var appLink = '/app/' + app.id + '/testsuites/'
                         a(href=appLink) Test Suites
+                    li(class=(sub_view == 'notifications') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/notifications/'
+                        a(href=appLink) Notifications
             div.well.control-group
                 p
                     button.btn.btn-primary#startAppBtn Start
@@ -32,9 +36,8 @@ div.span12
                 include app.objects.jade
             - else if (sub_view == 'testsuites')
                 include app.testsuites.jade
+            - else if (sub_view == 'notifications')
+                include app.notifications.jade
             - else
                 h1 Please select category
-
-    script(type='text/javascript')
-        var applicationId = #{app.id};
     script(type='text/javascript', src='/javascripts/app/views/app.view.js')

@@ -183,6 +183,17 @@ var ApplicationController = {
 
 
 var ApplicationStateTriggers = [
+
+    // handle changing application attributes
+    function (application, diff) {
+        if (typeof diff['notify_proxy_fun'] == 'object') {
+            application.notify_proxy_fun = diff['notify_proxy_fun'].newS;
+        }
+
+
+        return application;
+    },
+
     // handles state change
     function (application, diff) {
         console.log('diff', diff);

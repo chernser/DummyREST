@@ -24,6 +24,8 @@ exports.application = function(req, res) {
     var subject = 'objects';
     if (req.params.subject == 'testsuites') {
         subject = 'testsuites';
+    } else if (req.params.subject == 'notifications') {
+        subject = 'notifications';
     }
 
     app_storage.getApplication(req.params.id, function(application) {

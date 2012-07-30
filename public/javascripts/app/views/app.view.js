@@ -30,7 +30,7 @@ require([
 
 
             var objtypes = this.model.get('objtypes');
-            if (objtypes.length > 0) {
+            if (this.model.has('objectypes') && objtypes.length > 0) {
                 this.onObjectSelect(objtypes[0].name);
             }  else {
                 this.drawGrid([
@@ -448,13 +448,16 @@ require([
 
     });
 
-    var application = new App.ApplicationModel({id:applicationId});
-    application.fetch({
-        success:function (model) {
-            debug("Application is loaded");
-            var view = new App.AppView({model:model});
+    if (typeof App.application == 'undefined') {
+        App.application = new App.ApplicationModel({id:applicationId});
+        App.application.fetch({
+            success:function (model) {
+                var view = new App.AppView({model:model});
+            }
+        });
+    } else {
+        var view = new App.AppView({model:App.application});
+    }
 
-        }
-    });
 
 });

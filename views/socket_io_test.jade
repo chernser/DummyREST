@@ -1,27 +1,31 @@
 div.row
-    div.span6.well
+    div.span10.well
         h1 Socket.IO Test Page
         p#socketEvents
+
 script(type='text/javascript')
     var socket_io_url = 'http://' + window.location.hostname + ':#{socket_io_port}/';
     require([socket_io_url + 'socket.io/socket.io.js'],
         function() {
-            var socket = io.connect(socket_io_url);
-
             function out(type, event) {
                 $("#socketEvents").append(type + ": " + JSON.stringify(event) + '<br>');
             }
 
-            socket.on('resource_updated', function(event) {
-                out('updated', event);
-            });
+            var socket = io.connect(socket_io_url);
 
-            socket.on('resource_created', function(event) {
-                out('created', event);
-            });
-
-            socket.on('resource_deleted', function(event) {
-                out('deleted', event);
-            });
+            (function() {
+              var emit = socket.emit;
+              socket.emit = function() {
+                var args = Array.prototype.slice.call(arguments);
+                out(args[0], args[1]);
+                emit.apply(socket, arguments);
+              };
+              var $emit = socket.$emit;
+              socket.$emit = function() {
+                var args = Array.prototype.slice.call(arguments);
+                out(args[0], args[1]);
+                $emit.apply(socket, arguments);
+              };
+            })();
         });
 

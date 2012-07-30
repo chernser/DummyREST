@@ -401,10 +401,42 @@ AppApi.prototype.unpublish_routes = function () {
     });
 };
 
+function DEFAULT_NOTIFY_PROXY(event, resource)  {
+    event.data = resource;
+    return event;
+}
+
+function getNotifyProxy(application) {
+    if (typeof application.notify_proxy_fun != 'undefined') {
+        try {
+            eval(application.notify_proxy_fun);
+            return proxy;
+        } catch (e) {
+            console.log("Error: failed to eval notify proxy function: ", e.toString(), e );
+        }
+    }
+
+    return DEFAULT_NOTIFY_PROXY;
+}
 
 
 AppApi.prototype.send_event = function(eventName, eventData) {
-    this.socket.emit(eventName, eventData);
+    var api = this;
+
+    api.app_storage.getApplication(api.app_id, function(application) {
+        var proxy = getNotifyProxy(application);
+        var event = proxy({name: eventName, type: 'event'}, eventData);
+
+        if (typeof event.name != 'undefined' && event.name != '') {
+            eventName = event.name;
+        }
+
+        if (typeof event.data != 'undefined' ) {
+            eventData = event.data;
+        }
+        api.socket.emit(eventName, eventData);
+    });
+
 };
 
 AppApi.prototype.notifyResourceChanged = function(resource) {

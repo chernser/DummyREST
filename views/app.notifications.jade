@@ -1,0 +1,21 @@
+
+div.row#sub_view
+    div.span10
+        h2 Socket.io Notification Configuration
+        a#notificationTestPageLink(href="#", target="new") Notifications Test Page
+        hr
+        div.form
+            div.control-group
+                label
+                    b Notification Proxy Function
+                div.controls
+                    textarea.span5(rows = 7)#notifyProxyFunction
+                    i.help-inline
+                        |This function should return object with fields <b>'name'</b>, <b>'type'</b>, <b>'data'.</b><br>
+                        |By default 'event' passed to function has correct 'name', 'type' fields<br>
+                        |If message should be sent instead event, set event.type = 'msg'<br>
+                    p#proxySimpleTestOutput
+            div.btn-group
+                button.btn#saveNotifyProxyFunction Save
+
+    script(type='text/javascript', src='/javascripts/app/views/app.notifications.view.js')
