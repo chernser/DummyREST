@@ -3,6 +3,7 @@ require([
     'testsuite.model',
     'application.model'
 ], function () {
+
     App.AppNotificationsView = Backbone.View.extend({
 
         initialize:function (attributes) {
@@ -59,17 +60,4 @@ require([
             }
         }
     });
-
-
-    if (typeof App.application == 'undefined') {
-        App.application = new App.ApplicationModel({id:applicationId});
-        App.application.fetch({
-            success:function (model) {
-                var view = new App.AppNotificationsView({model:model});
-            }
-        });
-    } else {
-        var view = new App.AppNotificationsView({model:App.application});
-    }
-
 });

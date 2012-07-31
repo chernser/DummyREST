@@ -14,25 +14,20 @@ require([
             this.$el = $("#view");
             this.model = attributes.model;
             this.toggleNewObjectTypeForm();
-            this.toggleProxyCode();
             this.updateState();
 
             var view = this;
 
             $(".objtypelnk").click(function () {
-                $(".objtypelnk").each(function(index, item) {
-                    $(item).parent().removeClass("active");
-                });
-                $(this).parent().addClass('active');
                 var objname = $(this).attr('obj');
                 view.onObjectSelect(objname);
             });
 
 
             var objtypes = this.model.get('objtypes');
-            if (this.model.has('objectypes') && objtypes.length > 0) {
+            if (this.model.has('objtypes') && objtypes.length > 0) {
                 this.onObjectSelect(objtypes[0].name);
-            }  else {
+            } else {
                 this.drawGrid([
                     {name:""}
                 ], "/");
@@ -44,7 +39,7 @@ require([
 
             $("#objectInstances").jqGrid("GridUnload");
 
-            var fields = { _id: 1};
+            var fields = { _id:1};
             for (var index in data) {
                 var obj = data[index];
                 for (var field in obj) {
@@ -54,6 +49,7 @@ require([
 
             var colNames = [];
             var colModel = [];
+            $("#idField").html("");
             for (var field in fields) {
                 colNames.push(field);
                 colModel.push({
@@ -61,7 +57,11 @@ require([
                     index:field,
                     jsonmap:field
                 });
+
+                $("#idField").append("<option value='" + field + "'>" + field + "</option>");
             }
+
+
 
             var options = {
                 url:url,
@@ -85,7 +85,7 @@ require([
                         return obj.length;
                     }
                 },
-                width:800,
+                width:700,
                 rowNum:10,
                 rowList:[10, 20, 30],
                 sortname:'name',
@@ -101,7 +101,7 @@ require([
         },
 
 
-        getSelectedInstance: function() {
+        getSelectedInstance:function () {
             var rowId = $('#objectInstances').jqGrid('getGridParam', 'selrow');
             if (rowId != null) {
                 return $("#objectInstances").jqGrid('getRowData', rowId);
@@ -124,6 +124,9 @@ require([
                 dataType:"json",
                 success:function (data) {
                     view.drawGrid(data, url);
+                    if (_.isString(view.selectedObjectType.id_field)) {
+                        $("#idField").val(view.selectedObjectType.id_field);
+                    }
                 },
 
                 error:function (x, e) {
@@ -183,17 +186,16 @@ require([
             'click #cancelNewObjectType':'toggleNewObjectTypeForm',
             'click #createObjectType':'onCreateObjectType',
             'click #deleteObjectType':'onDeleteObjectType',
-            'click #showProxyCode':'toggleProxyCode',
             'click #addObjectBtn':'onAddObjectBtn',
             'click #saveObjectDefinition':'onSaveObjectDefinition',
-            'click #editProxyCode':'toggleProxyCodeEditable',
             'click #saveProxyCode':'saveObjectTypeProxyCode',
             'keypress #objectTypeProxyCode':'toggleSaveProxyCodeButton',
             'change #routesArePublished':'onRoutesPublish',
-            'click #editObjectBtn' : 'onEditObjectInstance',
-            'click #saveObjectInstance' : 'onSaveObjectInstance',
-            'click #createObjectInstance' : 'onCreateObjectInstance',
-            'click #removeObjectBtn' : 'onRemoveObjectInstance'
+            'click #editObjectBtn':'onEditObjectInstance',
+            'click #saveObjectInstance':'onSaveObjectInstance',
+            'click #createObjectInstance':'onCreateObjectInstance',
+            'click #removeObjectBtn':'onRemoveObjectInstance',
+            'change #idField': 'onIdFieldChange'
 
         },
 
@@ -236,7 +238,7 @@ require([
                 }
             });
 
-            delete newObjectTypeModel;
+
         },
 
         onDeleteObjectType:function () {
@@ -245,6 +247,16 @@ require([
         },
 
         onObjectSelect:function (objname) {
+            $(".objtypelnk").each(function (index, item) {
+                if ($(this).attr("obj") == objname) {
+                    $(item).parent().addClass("active");
+                } else {
+                    $(item).parent().removeClass("active");
+                }
+            });
+            $(this).parent().addClass('active');
+
+
             debug("Object ", objname, " selected in application", this.model.id);
 
             var objtypes = this.model.get('objtypes');
@@ -262,20 +274,15 @@ require([
 
             $("#objNameHeader > i").text(objname);
 
-            var proxy_code =  (typeof this.selectedObjectType.proxy_code != 'undefined') ?
-                    this.selectedObjectType.proxy_code : this.DEFAULT_PROXY_CODE;
-
+            var proxy_code = (typeof this.selectedObjectType.proxy_code != 'undefined') ?
+                this.selectedObjectType.proxy_code : this.DEFAULT_PROXY_CODE;
 
             this.proxy_code_changed = false;
             $("#saveProxyCode").attr('disabled', true);
-            $("#objectTypeProxyCode").text(proxy_code);
+            $("#objectTypeProxyCode").val(proxy_code);
             $("#objectInstances").setGridParam({url:this.BASE_OBJECT_INSTANCES_URL + objname});
             $("#objectInstanceJSON").val("");
             this.reloadInstances();
-        },
-
-        toggleProxyCode:function () {
-            $("#objectTypeProxyCodeFrm").toggle();
         },
 
         onAddObjectBtn:function () {
@@ -286,51 +293,31 @@ require([
 
         },
 
-        DEFAULT_PROXY_CODE: "function proxy(resource) { \n\t return resource; \n } ",
+        DEFAULT_PROXY_CODE:"function proxy(resource) { \n\t return resource; \n } ",
 
         proxy_code_changed:false,
-
-        toggleProxyCodeEditable:function () {
-            if ($("#objectTypeProxyCode").attr("disabled")) {
-                $("#editProxyCode").text("cancel");
-                $("#objectTypeProxyCode").attr("disabled", false);
-            } else {
-                var code = this.selectedObjectType == null ? this.DEFAULT_PROXY_CODE :
-                    (typeof this.selectedObjectType.proxy_code == 'undefined' ? this.DEFAULT_PROXY_CODE :
-                        this.selectedObjectType.proxy_code);
-                this.proxy_code_changed = false;
-                $("#saveProxyCode").attr('disabled', true);
-                $("#objectTypeProxyCode").val(code);
-                $("#editProxyCode").text("edit");
-                $("#objectTypeProxyCode").attr("disabled", true);
-            }
-        },
 
         saveObjectTypeProxyCode:function () {
             var code = $("#objectTypeProxyCode").val();
             $("#proxyCodeError").text("");
             try {
                 var fun = eval("var proxy_fun = " + code);
-                debug(proxy_fun({}));
 
                 this.selectedObjectType.proxy_code = code;
                 var url = '/api/app/' + this.model.id + '/objtype/' + this.selectedObjectType.name + '/';
                 $.ajax({
-                    url: url,
-                    type: 'PUT',
-                    dataType: "json",
-                    data: JSON.stringify(this.selectedObjectType),
-                    contentType: "application/json",
-                    success: function(data) {
-                        debug("Object type saved: ", data);
+                    url:url,
+                    type:'PUT',
+                    dataType:"json",
+                    data:JSON.stringify(this.selectedObjectType),
+                    contentType:"application/json",
+                    success:function (data) {
+                        $("#saveProxyCode").attr('disabled', true);
                     },
 
-                    error: function() {
+                    error:function () {
                         debug("Failed to save object type: ");
-
                     }
-
-
                 })
 
             } catch (e) {
@@ -363,7 +350,7 @@ require([
             });
         },
 
-        onEditObjectInstance: function() {
+        onEditObjectInstance:function () {
             var instance = this.getSelectedInstance();
             debug("Editing instance: ", instance);
 
@@ -373,12 +360,12 @@ require([
         },
 
 
-        updateOrCreateObjectInstance: function(json, update) {
+        updateOrCreateObjectInstance:function (json, update) {
             $("#objectInstanceDefinitionError").text("");
             var instance = null;
             try {
                 instance = JSON.parse(json);
-                if (instance == null || typeof instance != 'object')  {
+                if (instance == null || typeof instance != 'object') {
                     throw new Error("Invalid Object Instance definition");
                 }
 
@@ -394,17 +381,17 @@ require([
                 debug("Saving object", url, " : ", instance);
 
                 $.ajax({
-                    url: url,
-                    type: update ? 'PUT' : 'POST',
-                    data: JSON.stringify(instance),
-                    dataType: "json",
-                    contentType: "application/json",
-                    success: function() {
+                    url:url,
+                    type:update ? 'PUT' : 'POST',
+                    data:JSON.stringify(instance),
+                    dataType:"json",
+                    contentType:"application/json",
+                    success:function () {
                         debug("instance saved");
                         view.reloadInstances();
                     },
 
-                    error: function() {
+                    error:function () {
                         debug("failed to save instance");
                     }
                 })
@@ -415,15 +402,15 @@ require([
 
         },
 
-        onSaveObjectInstance: function() {
+        onSaveObjectInstance:function () {
             this.updateOrCreateObjectInstance($("#objectInstanceJSON").val(), true);
         },
 
-        onCreateObjectInstance: function() {
+        onCreateObjectInstance:function () {
             this.updateOrCreateObjectInstance($("#objectInstanceJSON").val(), false);
         },
 
-        onRemoveObjectInstance: function() {
+        onRemoveObjectInstance:function () {
             var instance = this.getSelectedInstance();
             if (instance == null) {
                 return;
@@ -433,30 +420,101 @@ require([
             debug("Removing instance object", url, " : ", instance);
             var view = this;
             $.ajax({
-                url: url,
-                type: 'DELETE',
-                success: function() {
+                url:url,
+                type:'DELETE',
+                success:function () {
                     debug("instance removed");
                     view.reloadInstances();
                 },
 
-                error: function() {
+                error:function () {
                     debug("failed to save instance");
                 }
             })
+        },
+
+        onIdFieldChange: function() {
+            var idField = $("#idField").val();
+            debug("changing id field to: ", idField);
+
+            this.selectedObjectType.id_field = idField;
+            var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
+            selectedObjectTypeModel.save({id: this.selectedObjectType.name}, {
+                success: function(model) {
+                    debug("idField is set for ", model.get('name'));
+                },
+
+                error: function() {
+                    debug("Failed to set id field");
+                }
+            })
+
         }
 
     });
+
+    function initRouter() {
+        App.Router = Backbone.Router.extend({
+
+            routes:{
+                "instances":"showInstances",
+                "proxy_fun":"showProxyFun",
+                "routes":"showRoutes"
+            },
+
+            showPane:function (pane) {
+                $(".tab-pane").removeClass('active');
+                $("#" + pane).addClass('active');
+
+                $("#tabNavigation li").removeClass('active');
+                $("#tabNavigation li").find("[href='#" + pane + "']").parent().addClass('active');
+            },
+
+            showInstances:function () {
+                this.showPane('instances');
+            },
+
+            showProxyFun:function () {
+                this.showPane('proxy_fun');
+            },
+
+            showRoutes:function () {
+                this.showPane('routes');
+            }
+
+        });
+
+        if (typeof Backbone.history != 'undefined') {
+            Backbone.history.stop();
+        }
+
+        new App.Router();
+
+
+        Backbone.history.start();
+
+    }
+
+    function initSubView(model) {
+        if (typeof App.AppNotificationsView != 'undefined') {
+            debug("initializing subview")
+            new App.AppNotificationsView({model: model});
+        }
+    }
 
     if (typeof App.application == 'undefined') {
         App.application = new App.ApplicationModel({id:applicationId});
         App.application.fetch({
             success:function (model) {
                 var view = new App.AppView({model:model});
+                initSubView(model);
+                initRouter();
             }
         });
     } else {
         var view = new App.AppView({model:App.application});
+        initSubView(App.application);
+        initRouter();
     }
 
 

@@ -65,12 +65,20 @@ AppApi.prototype.init = function () {
     this.socket_io_port = 10100 + app_id;
     this.io = socket_io.listen(this.socket_io_port);
 
-    this.io.on('connection', function(socket) {
+    this.io.on('connection', function (socket) {
         api.socket = socket;
     });
 
 
     // Express.JS
+    app.get(/^\/api2\/((\w+\/?)+)/, function (req, res) {
+        var parts = req.params[0].split('/');
+
+
+        res.send(200);
+
+    });
+
     app.get('/api/', function (req, res) {
         app_storage.getApplication(app_id, function (application) {
 
@@ -100,7 +108,7 @@ AppApi.prototype.init = function () {
     });
 
     app.get('/api/:resource/:id?', function (req, res) {
-        api.handleGet(req.params.resource, req.params.id, function(err, object) {
+        api.handleGet(req.params.resource, req.params.id, function (err, object) {
             if (err != null) {
                 res.send(err);
             } else {
@@ -110,7 +118,7 @@ AppApi.prototype.init = function () {
     });
 
     app.put('/api/:resource/:id', function (req, res) {
-        api.handlePut(req.params.resource, req.body, function(err, object) {
+        api.handlePut(req.params.resource, req.body, function (err, object) {
             if (err != null) {
                 res.send(err);
             } else {
@@ -121,7 +129,7 @@ AppApi.prototype.init = function () {
 
 
     app.post('/api/:resource/', function (req, res) {
-        api.handlePost(req.params.resource, req.body, function(err, object) {
+        api.handlePost(req.params.resource, req.body, function (err, object) {
             if (err != null) {
                 res.send(err);
             } else {
@@ -131,7 +139,7 @@ AppApi.prototype.init = function () {
     });
 
     app.delete('/api/:resource/:id', function (req, res) {
-        api.handlePost(req.params.resource, req.body, function(err, object) {
+        api.handlePost(req.params.resource, req.body, function (err, object) {
             if (err != null) {
                 res.send(err);
             } else {
@@ -141,21 +149,21 @@ AppApi.prototype.init = function () {
     });
 
     app.get('/', function (req, res) {
-        res.render('app_index', {title: 'Application ' + app_id});
+        res.render('app_index', {title:'Application ' + app_id});
 
     });
 
 
     console.log("socket.io port: ", this.socket_io_port);
     app.get('/socket_test/', function (req, res) {
-        res.render('socket_io_test', { title: 'Application ' + app_id,
-            app_id: app_id, socket_io_port: api.socket_io_port});
+        res.render('socket_io_test', { title:'Application ' + app_id,
+            app_id:app_id, socket_io_port:api.socket_io_port});
     });
 };
 
 
 AppApi.prototype.getObjectType = function (resource, callback) {
-    this.app_storage.getObjectType(this.app_id, resource, function(err, objectType) {
+    this.app_storage.getObjectType(this.app_id, resource, function (err, objectType) {
         if (err == 'not_found') {
             callback(404, null);
             return;
@@ -177,9 +185,13 @@ function getProxy(objectType, defaultProxy) {
     }
 }
 
-AppApi.prototype.handleGet = function(resource, id, callback) {
+function getObjectId(id, objectType) {
+    return typeof objectType.id_field != 'undefined' ? {field: objectType.id_field, id: id} : id;
+}
+
+AppApi.prototype.handleGet = function (resource, id, callback) {
     var api = this;
-    api.getObjectType(resource, function(err, objectType) {
+    api.getObjectType(resource, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
@@ -187,8 +199,14 @@ AppApi.prototype.handleGet = function(resource, id, callback) {
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
         if (typeof id != 'undefined' && id != null) {
+            id = getObjectId(id, objectType);
+
             api.app_storage.getObjectInstance(api.app_id, objectType.name, id, function (resource) {
-                callback(null, proxy(resource));
+                if (typeof resource != 'undefined') {
+                    callback(null, proxy(resource));
+                } else {
+                    callback(null, null);
+                }
             });
         } else {
             api.app_storage.getObjectInstances(api.app_id, objectType.name, function (resources) {
@@ -202,17 +220,17 @@ AppApi.prototype.handleGet = function(resource, id, callback) {
     });
 };
 
-AppApi.prototype.handlePut = function(resource, instance, callback) {
+AppApi.prototype.handlePut = function (resource, instance, callback) {
     var api = this;
-    api.getObjectType(resource, function(err, objectType) {
+    api.getObjectType(resource, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
         }
 
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
-
-        api.app_storage.saveObjectInstance(api.app_id, objectType.name, instance, function(saved) {
+        id = getObjectId(id, objectType);
+        api.app_storage.saveObjectInstance(api.app_id, objectType.name, instance, function (saved) {
             var resource = proxy(saved);
             api.notifyResourceChanged(saved);
             callback(null, resource);
@@ -220,9 +238,9 @@ AppApi.prototype.handlePut = function(resource, instance, callback) {
     });
 };
 
-AppApi.prototype.handlePost = function(resource, instance, callback) {
+AppApi.prototype.handlePost = function (resource, instance, callback) {
     var api = this;
-    api.getObjectType(resource, function(err, objectType) {
+    api.getObjectType(resource, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
@@ -230,21 +248,21 @@ AppApi.prototype.handlePost = function(resource, instance, callback) {
 
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
-        api.app_storage.addObjectInstace(api.app_id, objectType.name, instance, function(saved) {
+        api.app_storage.addObjectInstace(api.app_id, objectType.name, instance, function (saved) {
             callback(null, proxy(saved));
         });
     });
 };
 
-AppApi.prototype.handleDelete = function(resource, id, callback) {
+AppApi.prototype.handleDelete = function (resource, id, callback) {
     var api = this;
-    api.getObjectType(resource, function(err, objectType) {
+    api.getObjectType(resource, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
         }
-
-        api.app_storage.deleteObjectInstance(api.app_id, objectType.name, id, function() {
+        id = getObjectId(id, objectType);
+        api.app_storage.deleteObjectInstance(api.app_id, objectType.name, id, function () {
             callback(null, null);
         });
     });
@@ -277,7 +295,7 @@ AppApi.prototype.composeRoutesMsg = function (action) {
         {
             pattern:'api*',
             weight:1,
-            destination: "amqp:" + this.APP_API_EXCHANGE + ":app_" + this.app_id
+            destination:"amqp:" + this.APP_API_EXCHANGE + ":app_" + this.app_id
         }
     ];
 
@@ -289,19 +307,19 @@ AppApi.prototype.composeRoutesMsg = function (action) {
 
 };
 
-AppApi.prototype.sendResponseMsg = function(attributes, req) {
+AppApi.prototype.sendResponseMsg = function (attributes, req) {
 
     var api = this;
     var to_node = null;
     var to_pid = null;
-    for (var node in req.from ) {
+    for (var node in req.from) {
         to_pid = req.from[node];
         to_node = node;
         break;
     }
     var response = {
-        to: to_pid,
-        httpStatus: 200
+        to:to_pid,
+        httpStatus:200
     };
 
     if (typeof attributes.httpStatus != 'undefined') {
@@ -313,8 +331,8 @@ AppApi.prototype.sendResponseMsg = function(attributes, req) {
     }
 
     console.log("Sending response: ", response);
-    api.amqp_connection.exchange(api.HTTP_CONF_EXCHANGE, {}, function(exchange) {
-        exchange.publish(to_node, response, {contentType: 'application/json'});
+    api.amqp_connection.exchange(api.HTTP_CONF_EXCHANGE, {}, function (exchange) {
+        exchange.publish(to_node, response, {contentType:'application/json'});
     });
 };
 
@@ -336,7 +354,6 @@ AppApi.prototype.publish_routes = function () {
         });
 
 
-
         connection.exchange(api.APP_API_EXCHANGE, {}, function (exchange) {
 
             connection.queue(exchange.name + "_" + app_id, function (queue) {
@@ -349,38 +366,38 @@ AppApi.prototype.publish_routes = function () {
                     var parsed_path = message.path.split("/");
                     var resource = parsed_path[parsed_path.length - 2];
                     var resource_id = parsed_path[parsed_path.length - 1];
-                    var instance = message.httpBody != '' ?  JSON.parse(message.httpBody) : {};
+                    var instance = message.httpBody != '' ? JSON.parse(message.httpBody) : {};
 
                     if (message.httpMethod == 'GET') {
                         console.log("> resource ", resource, " id ", resource_id);
-                        api.app_storage.getObjectType(api.app_id, resource, function(objectType) {
+                        api.app_storage.getObjectType(api.app_id, resource, function (objectType) {
                             if (objectType == null || typeof objectType == 'undefined') {
                                 console.log("unknown object type: ", resource);
                                 resource = resource_id;
                                 resource_id = null;
                             }
 
-                            api.handleGet(resource, resource_id, function(err, object) {
+                            api.handleGet(resource, resource_id, function (err, object) {
                                 if (err != null) {
-                                    api.sendResponseMsg({httpStatus: 400}, message);
+                                    api.sendResponseMsg({httpStatus:400}, message);
                                 } else {
-                                    api.sendResponseMsg({httpStatus: 200, body: object}, message);
+                                    api.sendResponseMsg({httpStatus:200, body:object}, message);
                                 }
                             });
                         });
 
 
                     } else if (message.httpMethod == 'POST') {
-                        api.handlePost(resource, instance, function(err, object) {
-                            api.sendResponseMsg({httpStatus: 200, body:object}, message);
+                        api.handlePost(resource, instance, function (err, object) {
+                            api.sendResponseMsg({httpStatus:200, body:object}, message);
                         });
                     } else if (message.httpMethod == 'PUT') {
-                        api.handlePut(resource, instance, function(err, object) {
-                            api.sendResponseMsg({httpStatus: 200, body:object}, message);
+                        api.handlePut(resource, instance, function (err, object) {
+                            api.sendResponseMsg({httpStatus:200, body:object}, message);
                         });
                     } else if (message.httpMethod == 'DELETE') {
-                        api.handleDelete(resource, resource_id, function(err, object) {
-                            api.sendResponseMsg({httpStatus: 200}, message);
+                        api.handleDelete(resource, resource_id, function (err, object) {
+                            api.sendResponseMsg({httpStatus:200}, message);
                         });
                     }
                     // TODO: add code handling routes
@@ -401,7 +418,7 @@ AppApi.prototype.unpublish_routes = function () {
     });
 };
 
-function DEFAULT_NOTIFY_PROXY(event, resource)  {
+function DEFAULT_NOTIFY_PROXY(event, resource) {
     event.data = resource;
     return event;
 }
@@ -412,7 +429,7 @@ function getNotifyProxy(application) {
             eval(application.notify_proxy_fun);
             return proxy;
         } catch (e) {
-            console.log("Error: failed to eval notify proxy function: ", e.toString(), e );
+            console.log("Error: failed to eval notify proxy function: ", e.toString(), e);
         }
     }
 
@@ -420,23 +437,23 @@ function getNotifyProxy(application) {
 }
 
 
-AppApi.prototype.send_event = function(eventName, eventData) {
+AppApi.prototype.send_event = function (eventName, eventData) {
     var api = this;
 
     if (typeof api.socket == 'undefined') {
         console.log("Socket is not yet initialized");
         return;
     }
-    api.app_storage.getApplication(api.app_id, function(application) {
+    api.app_storage.getApplication(api.app_id, function (application) {
 
         var proxy = getNotifyProxy(application);
-        var event = proxy({name: eventName, type: 'event'}, eventData);
+        var event = proxy({name:eventName, type:'event'}, eventData);
 
         if (typeof event.name != 'undefined' && event.name != '') {
             eventName = event.name;
         }
 
-        if (typeof event.data != 'undefined' ) {
+        if (typeof event.data != 'undefined') {
             eventData = event.data;
         }
         api.socket.emit(eventName, eventData);
@@ -444,14 +461,14 @@ AppApi.prototype.send_event = function(eventName, eventData) {
 
 };
 
-AppApi.prototype.notifyResourceChanged = function(resource) {
-  this.send_event('resource_updated', resource);
+AppApi.prototype.notifyResourceChanged = function (resource) {
+    this.send_event('resource_updated', resource);
 };
 
-AppApi.prototype.notifyResourceCreated = function(resource) {
+AppApi.prototype.notifyResourceCreated = function (resource) {
     this.send_event('resource_created', resource);
 };
 
-AppApi.prototype.notifyResourceDeleted = function(resource) {
+AppApi.prototype.notifyResourceDeleted = function (resource) {
     this.send_event('resource_deleted', resource);
 };

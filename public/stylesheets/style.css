@@ -7391,3 +7391,9 @@ body {
 .application-list li {
   margin-top: 0.8em;
 }
+label {
+  font-weight: bold;
+}
+.form {
+  margin-top: 1.7em;
+}
