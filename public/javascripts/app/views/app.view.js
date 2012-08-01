@@ -24,6 +24,14 @@ require([
             });
 
 
+            $("textarea").keydown(function(objEvent) {
+                if (objEvent.keyCode == 9) {  //tab pressed
+                    $(this).val($(this).val() + '    ');
+                    objEvent.preventDefault(); // stops its action
+                }
+            })
+
+
             var objtypes = this.model.get('objtypes');
             if (this.model.has('objtypes') && objtypes.length > 0) {
                 this.onObjectSelect(objtypes[0].name);
@@ -200,9 +208,7 @@ require([
             'click #createObjectInstance':'onCreateObjectInstance',
             'click #removeObjectBtn':'onRemoveObjectInstance',
             'change #idField': 'onIdFieldChange'
-
         },
-
 
         onStartApp:function () {
             var view = this;
@@ -358,7 +364,7 @@ require([
             var instance = this.getSelectedInstance();
             debug("Editing instance: ", instance);
 
-            var instance_def = JSON.stringify(instance).split(",").join(",\n").replace("{", "{\n").replace("}", "\n}");
+            var instance_def = JSON.stringify(instance, null, 4);
             $("#objectInstanceJSON").val(instance_def);
 
         },
