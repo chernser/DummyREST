@@ -37,6 +37,8 @@ require([
 
         drawGrid:function (data, url) {
 
+            this.object_instances = data;
+
             $("#objectInstances").jqGrid("GridUnload");
 
             var fields = { _id:1};
@@ -104,7 +106,9 @@ require([
         getSelectedInstance:function () {
             var rowId = $('#objectInstances').jqGrid('getGridParam', 'selrow');
             if (rowId != null) {
-                return $("#objectInstances").jqGrid('getRowData', rowId);
+                // TODO: it is temp solution until table is sorted
+                return this.object_instances[rowId - 1];
+                //return $("#objectInstances").jqGrid('getRowData', rowId);
             }
 
             return null;

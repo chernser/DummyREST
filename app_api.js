@@ -186,7 +186,11 @@ function getProxy(objectType, defaultProxy) {
 }
 
 function getObjectId(id, objectType) {
-    return typeof objectType.id_field != 'undefined' ? {field: objectType.id_field, id: id} : id;
+    if (typeof id != 'undefined' && id != null) {
+        return typeof objectType.id_field != 'undefined' ? {field: objectType.id_field, id: id} : id;
+    } else {
+        return null;
+    }
 }
 
 AppApi.prototype.handleGet = function (resource, id, callback) {
@@ -198,25 +202,23 @@ AppApi.prototype.handleGet = function (resource, id, callback) {
         }
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
-        if (typeof id != 'undefined' && id != null) {
-            id = getObjectId(id, objectType);
+        id = getObjectId(id, objectType);
 
-            api.app_storage.getObjectInstance(api.app_id, objectType.name, id, function (resource) {
-                if (typeof resource != 'undefined') {
-                    callback(null, proxy(resource));
+        api.app_storage.getObjectInstances(api.app_id, objectType.name, id, function (resources) {
+            if (typeof resources != 'undefined' && resources != null && resources.length > 0) {
+                if (id == null) {
+                    var response = [];
+                    for (var index in resources)  {
+                        response.push(proxy(resources[index]));
+                    }
+                    callback(null, response);
                 } else {
-                    callback(null, null);
+                    callback(null, proxy(resources[0]));
                 }
-            });
-        } else {
-            api.app_storage.getObjectInstances(api.app_id, objectType.name, function (resources) {
-                var response = [];
-                for (var i in resources) {
-                    response.push(proxy(resources[i]));
-                }
-                callback(null, response);
-            })
-        }
+            } else {
+                callback(null, null);
+            }
+        });
     });
 };
 
@@ -230,7 +232,7 @@ AppApi.prototype.handlePut = function (resource, instance, callback) {
 
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
         id = getObjectId(id, objectType);
-        api.app_storage.saveObjectInstance(api.app_id, objectType.name, instance, function (saved) {
+        api.app_storage.saveObjectInstance(api.app_id, objectType.name, id, instance, function (saved) {
             var resource = proxy(saved);
             api.notifyResourceChanged(saved);
             callback(null, resource);

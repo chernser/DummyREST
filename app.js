@@ -287,11 +287,8 @@ app.post('/api/app/:appId/:objType/', function (req, res) {
 
 app.get('/api/app/:appId/:objType/:id?', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-        if (typeof req.params.id == 'undefined') {
-            app_storage.getObjectInstances(req.params.appId, objectType.name, createResourceGetter(res));
-        } else {
-            app_storage.getObjectInstance(req.params.appId, objectType.name, req.params.id, createResourceGetter(res));
-        }
+        var id = typeof req.params.id == 'undefined'? null : req.params.id;
+        app_storage.getObjectInstances(req.params.appId, objectType.name, id, createResourceGetter(res));
     });
 });
 
