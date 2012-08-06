@@ -267,7 +267,7 @@ require([
         },
 
         getObjectTypeRoute: function (objectType) {
-            return typeof objectType.route != 'undefined' ? objectType.route : '/' + objectType.name + '/{id}/';
+            return typeof objectType.route_pattern != 'undefined' ? objectType.route_pattern : '/' + objectType.name + '/{id}/';
         },
 
         onObjectSelect:function (objname) {
