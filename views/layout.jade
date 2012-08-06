@@ -12,9 +12,9 @@ html
     script(type='text/javascript', src='/javascripts/bootstrap.js')
     script(type='text/javascript', src='/javascripts/require.js', data-main='/javascripts/app/main.js')
   body
-    .container
-        .row
+    .container-fluid
+        .span12
             h1
                 a(href="/")= title
-            != body
+        != body
 

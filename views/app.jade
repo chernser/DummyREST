@@ -1,7 +1,7 @@
 
 script(type='text/javascript')
     var applicationId = #{app.id};
-div.span12
+div.span13
     div.row
         div.span10
             h2= app.name
@@ -31,7 +31,7 @@ div.span12
 
                 p
                     button.btn.btn-danger.btn-small#deleteAppBtn Delete
-        div.span7
+        div.span10
             - if (sub_view == 'objects')
                 include app.objects.jade
             - else if (sub_view == 'testsuites')

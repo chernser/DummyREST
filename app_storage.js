@@ -277,6 +277,27 @@ AppStorage.prototype = {
         });
     },
 
+    getObjectTypeByRoute: function(appId, routePattern, callback) {
+        var storage = this;
+        storage.getApplication(appId, function (application) {
+            if (typeof application == 'undefined') {
+                callback('not_found', null);
+                return;
+            }
+
+
+            for (var index in application.objtypes) {
+                if (application.objtypes[index].route_pattern == routePattern) {
+                    if (typeof callback == 'function') {
+                        callback(null, application.objtypes[index]);
+                    }
+                    return;
+                }
+            }
+
+            callback('not_found', null);
+        });
+    },
 
     saveObjectType:function (appId, objectType, callback) {
         var storage = this;
@@ -337,14 +358,15 @@ AppStorage.prototype = {
         });
     },
 
-    getResourceCollection:function (appId, objectTypeName) {
-        return this.db.collection('app_resources_' + appId + '_' + objectTypeName);
+    getResourceCollection:function (appId) {
+        return this.db.collection('app_resources_' + appId);
     },
 
     addObjectInstace:function (appId, objectTypeName, instance, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
-        var collection = this.getResourceCollection(appId, objectTypeName);
+        var collection = this.getResourceCollection(appId);
+        instance.__objectType = objectTypeName;
         collection.insert(instance, function (err, object) {
             if (err != null) {
                 throw err;
@@ -352,31 +374,6 @@ AppStorage.prototype = {
 
             if (typeof callback == 'function') {
                 callback(object[0])
-            }
-        });
-    },
-
-    saveObjectInstance:function (appId, objectTypeName, instance, callback) {
-        if (this.db.state != 'connected') throw 'db not connected';
-
-        var collection = this.getResourceCollection(appId, objectTypeName);
-        var instance_id = this.createIdObject(instance._id);
-        if (instance_id == null) {
-            if (typeof callback == 'function')
-                callback(null);
-            return;
-        }
-
-        delete instance['_id'];
-
-        collection.findAndModify({_id:instance_id}, {}, instance, {safe:true, 'new':true}, function (err, saved) {
-            if (err != null) {
-                throw err;
-            }
-
-            console.log("saved: ", saved);
-            if (typeof callback == 'function') {
-                callback(saved);
             }
         });
     },
@@ -390,63 +387,98 @@ AppStorage.prototype = {
         }
     },
 
+    createInstanceQuery: function(instanceId, objectTypeName) {
+        var query = { __objectType: objectTypeName};
 
-    getObjectInstance:function (appId, objectTypeName, instanceId, callback) {
+        if (typeof instanceId != 'undefined' && instanceId != null) {
+
+            var id = instanceId;
+            var id_field = "_id";
+            if (typeof instanceId.field != 'undefined') {
+                id_field = instanceId.field;
+                id = instanceId.id;
+            }
+
+            if (id_field == "_id") {
+                id = this.createIdObject(id);
+            }
+
+            query[id_field] = id;
+        }
+
+        return query;
+    },
+
+    saveObjectInstance:function (appId, objectTypeName, instanceId, instance, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
+        var collection = this.getResourceCollection(appId);
+        var query = this.createInstanceQuery(instanceId, objectTypeName);
+        if (query == null) {
+            if (typeof callback == 'function')
+                callback(null);
+            return;
+        }
 
-        var collection = this.getResourceCollection(appId, objectTypeName);
-        var instance_id = this.createIdObject(instanceId);
-        if (instance_id == null) {
+        delete instance['_id'];
+        instance.__objectType = objectTypeName;
+
+        collection.findAndModify(query, {}, instance, {safe:true, 'new':true}, function (err, saved) {
+            if (err != null) {
+                throw err;
+            }
+
+            console.log("saved: ", saved);
+            if (typeof callback == 'function') {
+                callback(saved);
+            }
+        });
+    },
+
+
+    getObjectInstances:function (appId, objectTypeName, instanceId, callback) {
+        if (this.db.state != 'connected') throw 'db not connected';
+
+        var collection = this.getResourceCollection(appId);
+        var query = this.createInstanceQuery(instanceId, objectTypeName);
+        if (query == null) {
             if (typeof callback == 'function')
             callback(null);
             return;
         }
-        collection.find({_id:instance_id}, function (err, cursor) {
+
+        collection.find(query, function (err, cursor) {
             if (err != null) {
                 throw err;
             }
 
             if (typeof callback == 'function') {
                 cursor.toArray(function (err, items) {
+                    var cleaned_items = [];
 
-                    callback(items[0]);
+                    for (var index in items) {
+                        delete items[index]['__objectType'];
+                        cleaned_items.push(items[index]);
+                    }
+                    callback(cleaned_items);
                 });
             }
 
         });
     },
 
-    getObjectInstances:function (appId, objectType, callback) {
+    deleteObjectInstance:function (appId, objectTypeName, instanceId, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
-        var collection = this.getResourceCollection(appId, objectType);
-        collection.find({}, function (err, cursor) {
-            if (err != null) {
-                throw err;
-            }
-
-            if (typeof callback == 'function') {
-                cursor.toArray(function (err, items) {
-                    callback(items);
-                });
-            }
-        });
-
-    },
-
-    deleteObjectInstance:function (appId, objectTypeId, instanceId, callback) {
-        if (this.db.state != 'connected') throw 'db not connected';
-
-        var collection = this.getResourceCollection(appId, objectTypeId);
-        var instance_id = this.createIdObject(instanceId);
-        if (instance_id == null) {
+        var collection = this.getResourceCollection(appId);
+        var query = this.createInstanceQuery(instanceId, objectTypeName);
+        if (query == null) {
             if (typeof callback == 'function')
-                callback();
+                callback(null);
             return;
         }
 
-        collection.remove({_id:instance_id}, function (err, cursor) {
+        collection.remove(query, function (err, cursor) {
             if (err != null) {
                 throw err;
             }
@@ -466,7 +498,37 @@ AppStorage.prototype = {
     removeTestsuite:function (applicationId, callback) {
 
 
+    },
+
+
+    // Db Migration updates
+    migrate: function(appId) {
+
+        this.setDefaultRoutePatternForObjectTypes(appId);
+    },
+
+    setDefaultRoutePatternForObjectTypes: function(appId) {
+        var storage = this;
+
+        storage.getApplication(appId, function(application) {
+            if (application == null) {
+                console.log("Failed to migrate db for application: ", appId);
+                return;
+            }
+
+            var update = false;
+            for (var index in application.objtypes) {
+                if (typeof application.objtypes[index].route_pattern == 'undefined') {
+                    application.objtypes[index].route_pattern = '/' + application.objtypes[index].name + '/{id}/';
+
+                    update = true;
+                }
+            }
+
+            storage.saveApplication(application);
+        });
     }
+
 
 }
 
