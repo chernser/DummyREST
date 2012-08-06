@@ -216,7 +216,8 @@ require([
             'click #saveObjectInstance':'onSaveObjectInstance',
             'click #createObjectInstance':'onCreateObjectInstance',
             'click #removeObjectBtn':'onRemoveObjectInstance',
-            'change #idField': 'onIdFieldChange'
+            'change #idField': 'onIdFieldChange',
+            'click #saveRoutePatternBtn' : 'onSaveRoutePattern'
         },
 
         onStartApp:function () {
@@ -265,6 +266,10 @@ require([
 
         },
 
+        getObjectTypeRoute: function (objectType) {
+            return typeof objectType.route != 'undefined' ? objectType.route : '/' + objectType.name + '/{id}/';
+        },
+
         onObjectSelect:function (objname) {
             $(".objtypelnk").each(function (index, item) {
                 if ($(this).attr("obj") == objname) {
@@ -301,6 +306,7 @@ require([
             $("#objectTypeProxyCode").val(proxy_code);
             $("#objectInstances").setGridParam({url:this.BASE_OBJECT_INSTANCES_URL + objname});
             $("#objectInstanceJSON").val("");
+            $("#routePattern").val(this.getObjectTypeRoute(this.selectedObjectType));
             this.reloadInstances();
         },
 
@@ -468,6 +474,29 @@ require([
                 }
             })
 
+        },
+
+        onSaveRoutePattern: function()  {
+            var route_pattern = $("#routePattern").val();
+            if (route_pattern.charAt(route_pattern.length - 1) != '/') {
+                route_pattern += '/';
+                $("#routePattern").val(route_pattern);
+            }
+            debug("saving route pattern: ", route_pattern, " for object type: ", this.selectedObjectType.name);
+
+            this.selectedObjectType.route_pattern = route_pattern;
+
+            debug(this.selectedObjectType);
+            var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
+            selectedObjectTypeModel.save({id: this.selectedObjectType.name}, {
+                success: function(model)  {
+                    debug("route_pattern saved");
+                },
+
+                error: function() {
+                    debug("Failed to save route_pattern ");
+                }
+            });
         }
 
     });

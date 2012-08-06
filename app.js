@@ -302,7 +302,6 @@ app.put('/api/app/:appId/:objType/:id', function (req, res) {
 
 app.delete('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-
         app_storage.deleteObjectInstance(req.params.appId, objectType.name, req.params.id, function() {
             ApplicationController.notifyResourceDeleted(req.params.appId, {_id: req.params.id});
             res.send(200);

@@ -277,6 +277,27 @@ AppStorage.prototype = {
         });
     },
 
+    getObjectTypeByRoute: function(appId, routePattern, callback) {
+        var storage = this;
+        storage.getApplication(appId, function (application) {
+            if (typeof application == 'undefined') {
+                callback('not_found', null);
+                return;
+            }
+
+
+            for (var index in application.objtypes) {
+                if (application.objtypes[index].route_pattern == routePattern) {
+                    if (typeof callback == 'function') {
+                        callback(null, application.objtypes[index]);
+                    }
+                    return;
+                }
+            }
+
+            callback('not_found', null);
+        });
+    },
 
     saveObjectType:function (appId, objectType, callback) {
         var storage = this;
@@ -425,7 +446,7 @@ AppStorage.prototype = {
             callback(null);
             return;
         }
-        console.log("Q>> ", query);
+
         collection.find(query, function (err, cursor) {
             if (err != null) {
                 throw err;
@@ -477,7 +498,37 @@ AppStorage.prototype = {
     removeTestsuite:function (applicationId, callback) {
 
 
+    },
+
+
+    // Db Migration updates
+    migrate: function(appId) {
+
+        this.setDefaultRoutePatternForObjectTypes(appId);
+    },
+
+    setDefaultRoutePatternForObjectTypes: function(appId) {
+        var storage = this;
+
+        storage.getApplication(appId, function(application) {
+            if (application == null) {
+                console.log("Failed to migrate db for application: ", appId);
+                return;
+            }
+
+            var update = false;
+            for (var index in application.objtypes) {
+                if (typeof application.objtypes[index].route_pattern == 'undefined') {
+                    application.objtypes[index].route_pattern = '/' + application.objtypes[index].name + '/{id}/';
+
+                    update = true;
+                }
+            }
+
+            storage.saveApplication(application);
+        });
     }
+
 
 }
 

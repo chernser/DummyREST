@@ -28,7 +28,9 @@ AppApi.prototype.DEFAULT_RESOURCE_PROXY = function (resource) {
 AppApi.prototype.init = function () {
     var express = require('express')
         , routes = require('./routes')
-        , app_storage = require('./app_storage.js')()
+        , app_storage = require('./app_storage.js')(function () {
+            app_storage.migrate(api.app_id);
+        })
         , socket_io = require('socket.io')
         , api = this;
 
@@ -71,13 +73,42 @@ AppApi.prototype.init = function () {
 
 
     // Express.JS
-    app.get(/^\/api2\/((\w+\/?)+)/, function (req, res) {
-        var parts = req.params[0].split('/');
+    function getObjectTypeByUrl(url, res, callback) {
+        var route_pattern = routePatternFromPath(url);
 
+        app_storage.getObjectTypeByRoute(app_id, route_pattern, function (err, object_type) {
+            if (err != null) {
+                if (err == 'not_found') {
+                    res.send(404);
+                } else {
+                    res.send(500);
+                }
 
-        res.send(200);
+                return;
+            }
 
-    });
+            if (typeof callback == 'function') {
+                callback(object_type);
+            } else {
+                res.send(200);
+            }
+        });
+    }
+
+    var API_PATTERN = /^\/api\/((\w+\/?)+)/;
+    var getDefaultCallback = function (res) {
+        return function (err, object) {
+            if (err != null) {
+                res.send(err);
+            } else {
+                if (object != null) {
+                    res.json(object);
+                } else {
+                    res.send(200);
+                }
+            }
+        }
+    };
 
     app.get('/api/', function (req, res) {
         app_storage.getApplication(app_id, function (application) {
@@ -107,45 +138,20 @@ AppApi.prototype.init = function () {
 
     });
 
-    app.get('/api/:resource/:id?', function (req, res) {
-        api.handleGet(req.params.resource, req.params.id, function (err, object) {
-            if (err != null) {
-                res.send(err);
-            } else {
-                res.json(object);
-            }
-        });
+    app.get(API_PATTERN, function (req, res) {
+        api.handleGet(req.params[0], getDefaultCallback(res));
     });
 
-    app.put('/api/:resource/:id', function (req, res) {
-        api.handlePut(req.params.resource, req.body, function (err, object) {
-            if (err != null) {
-                res.send(err);
-            } else {
-                res.json(object);
-            }
-        });
+    app.post(API_PATTERN, function (req, res) {
+        api.handlePost(req.params[0], req.body, getDefaultCallback(res));
     });
 
-
-    app.post('/api/:resource/', function (req, res) {
-        api.handlePost(req.params.resource, req.body, function (err, object) {
-            if (err != null) {
-                res.send(err);
-            } else {
-                res.json(object);
-            }
-        });
+    app.put(API_PATTERN, function (req, res) {
+        api.handlePut(req.params[0], req.body, getDefaultCallback(res));
     });
 
-    app.delete('/api/:resource/:id', function (req, res) {
-        api.handlePost(req.params.resource, req.body, function (err, object) {
-            if (err != null) {
-                res.send(err);
-            } else {
-                res.send(200);
-            }
-        });
+    app.delete(API_PATTERN, function (req, res) {
+        api.handleDelete(req.params[0], getDefaultCallback(res));
     });
 
     app.get('/', function (req, res) {
@@ -162,8 +168,8 @@ AppApi.prototype.init = function () {
 };
 
 
-AppApi.prototype.getObjectType = function (resource, callback) {
-    this.app_storage.getObjectType(this.app_id, resource, function (err, objectType) {
+AppApi.prototype.getObjectTypeByRoute = function (route_pattern, callback) {
+    this.app_storage.getObjectTypeByRoute(this.app_id, route_pattern, function (err, objectType) {
         if (err == 'not_found') {
             callback(404, null);
             return;
@@ -186,16 +192,55 @@ function getProxy(objectType, defaultProxy) {
 }
 
 function getObjectId(id, objectType) {
-    if (typeof id != 'undefined' && id != null) {
-        return typeof objectType.id_field != 'undefined' ? {field: objectType.id_field, id: id} : id;
+    if (typeof id != 'undefined' && id != null && id != '') {
+        return typeof objectType.id_field != 'undefined' ? {field:objectType.id_field, id:id} : id;
     } else {
         return null;
     }
 }
 
-AppApi.prototype.handleGet = function (resource, id, callback) {
+
+/**
+ *  Parses url and extracts:
+ *  1. route  pattern
+ *  2. instance id if any
+ *
+ *
+ * @return {route_pattern: RoutePattern, id: IdPart}
+ */
+function getRouteInfoFromUrl(url) {
+    var parts = url.split('/');
+    var routePattern = "/";
+    var part_index = 0;
+    var no_of_parts = parts.length;
+    var id = null;
+
+    while (part_index < no_of_parts && parts[part_index] != '') {
+        // Resource name
+        routePattern += parts[part_index] + "/";
+
+        // Resource id
+        part_index += 1;
+        if (part_index < no_of_parts && parts[part_index] != '') {
+            id = parts[part_index];
+        } else {
+            id = null;
+        }
+        routePattern += "{id}/";
+
+        // Next pair
+        part_index += 1;
+    }
+
+    return {route_pattern:routePattern, id:id};
+}
+
+AppApi.prototype.handleGet = function (url, callback) {
     var api = this;
-    api.getObjectType(resource, function (err, objectType) {
+    var route_info = getRouteInfoFromUrl(url);
+    var route_pattern = route_info.route_pattern;
+    var id = route_info.id;
+    api.getObjectTypeByRoute(route_pattern, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
@@ -208,7 +253,7 @@ AppApi.prototype.handleGet = function (resource, id, callback) {
             if (typeof resources != 'undefined' && resources != null && resources.length > 0) {
                 if (id == null) {
                     var response = [];
-                    for (var index in resources)  {
+                    for (var index in resources) {
                         response.push(proxy(resources[index]));
                     }
                     callback(null, response);
@@ -222,9 +267,13 @@ AppApi.prototype.handleGet = function (resource, id, callback) {
     });
 };
 
-AppApi.prototype.handlePut = function (resource, instance, callback) {
+AppApi.prototype.handlePut = function (url, instance, callback) {
     var api = this;
-    api.getObjectType(resource, function (err, objectType) {
+    var route_info = getRouteInfoFromUrl(url);
+    var route_pattern = route_info.route_pattern;
+    var id = route_info.id;
+
+    api.getObjectTypeByRoute(route_pattern, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
@@ -240,9 +289,12 @@ AppApi.prototype.handlePut = function (resource, instance, callback) {
     });
 };
 
-AppApi.prototype.handlePost = function (resource, instance, callback) {
+AppApi.prototype.handlePost = function (url, instance, callback) {
     var api = this;
-    api.getObjectType(resource, function (err, objectType) {
+    var route_info = getRouteInfoFromUrl(url);
+    var route_pattern = route_info.route_pattern;
+
+    api.getObjectTypeByRoute(route_pattern, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
@@ -251,14 +303,18 @@ AppApi.prototype.handlePost = function (resource, instance, callback) {
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
         api.app_storage.addObjectInstace(api.app_id, objectType.name, instance, function (saved) {
-            callback(null, proxy(saved));
+            callback(err, proxy(saved));
         });
     });
 };
 
-AppApi.prototype.handleDelete = function (resource, id, callback) {
+AppApi.prototype.handleDelete = function (url, callback) {
     var api = this;
-    api.getObjectType(resource, function (err, objectType) {
+    var route_info = getRouteInfoFromUrl(url);
+    var route_pattern = route_info.route_pattern;
+    var id = route_info.id;
+
+    api.getObjectTypeByRoute(route_pattern, function (err, objectType) {
         if (err != null) {
             callback(err, null);
             return;
