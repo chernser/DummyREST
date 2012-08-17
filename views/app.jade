@@ -20,6 +20,9 @@ div.span13
                     li(class=(sub_view == 'notifications') ? 'active' : '')
                         - var appLink = '/app/' + app.id + '/notifications/'
                         a(href=appLink) Notifications
+                    li(class=(sub_view == 'plugins') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/plugins/'
+                        a(href=appLink) Plugins
             div.well.control-group
                 p
                     button.btn.btn-primary#startAppBtn Start
@@ -39,6 +42,8 @@ div.span13
                 include app.testsuites.jade
             - else if (sub_view == 'notifications')
                 include app.notifications.jade
+            - else if (sub_view == 'plugins')
+                include app.plugins.jade
             - else
                 h1 Please select category
     script(type='text/javascript', src='/javascripts/app/views/app.view.js')

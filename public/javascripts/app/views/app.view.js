@@ -212,7 +212,6 @@ require([
             'click #saveObjectDefinition':'onSaveObjectDefinition',
             'click #saveProxyCode':'saveObjectTypeProxyCode',
             'keypress #objectTypeProxyCode':'toggleSaveProxyCodeButton',
-            'change #routesArePublished':'onRoutesPublish',
             'click #editObjectBtn':'onEditObjectInstance',
             'click #saveObjectInstance':'onSaveObjectInstance',
             'click #createObjectInstance':'onCreateObjectInstance',
@@ -359,22 +358,6 @@ require([
             }
         },
 
-        onRoutesPublish:function () {
-            var areRoutesPublished = $("#routesArePublished").attr("checked") == 'checked';
-            debug("Routes are published: ", areRoutesPublished);
-
-            var view = this;
-            this.model.save({routes_are_published:areRoutesPublished}, {
-                success:function (model) {
-                    view.updateState();
-                },
-
-                error:function () {
-                    debug("Failed to change state");
-                    view.updateState();
-                }
-            });
-        },
 
         onEditObjectInstance:function () {
             var instance = this.getSelectedInstance();
