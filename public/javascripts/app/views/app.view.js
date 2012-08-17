@@ -165,11 +165,12 @@ require([
                 $("#stopAppBtn").attr("disabled", false);
                 var api_location = "http://" + window.location.hostname + ":" + this.model.get('api_port') + "/api/";
                 debug(api_location);
-                $("#rootAppApiLink").attr("href", api_location).text(api_location);
+                var link = $("<a></a>").attr("href", api_location).text(api_location);
+                $("#rootAppApiLink").html(link);
             } else {
                 $("#startAppBtn").attr("disabled", false);
                 $("#stopAppBtn").attr("disabled", true);
-                $("#rootAppApiLink").attr("href", "#").text("");
+                $("#rootAppApiLink").html("is not running");
             }
 
         },

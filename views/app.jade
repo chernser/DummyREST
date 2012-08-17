@@ -5,6 +5,8 @@ div.span13
     div.row
         div.span10
             h2= app.name
+                small(style="margin-left: 1em") API:&nbsp;
+                small#rootAppApiLink
     div.row#view
         div.span2
             div.well
@@ -22,8 +24,7 @@ div.span13
                 p
                     button.btn.btn-primary#startAppBtn Start
                     button.btn.btn-danger(disabled="true")#stopAppBtn Stop
-                    p
-                        a(href="http://:8100/api/", target="new")#rootAppApiLink
+
                 p.form-inline
                     label.checkbox
                         input(type="checkbox")#routesArePublished
