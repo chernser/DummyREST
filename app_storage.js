@@ -501,6 +501,7 @@ AppStorage.prototype = {
     },
 
 
+
     // Db Migration updates
     migrate: function(appId) {
 

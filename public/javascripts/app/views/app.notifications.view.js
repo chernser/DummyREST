@@ -4,7 +4,7 @@ require([
     'application.model'
 ], function () {
 
-    App.AppNotificationsView = Backbone.View.extend({
+    App.SubView = Backbone.View.extend({
 
         initialize:function (attributes) {
             this.$el = $("#sub_view");

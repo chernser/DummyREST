@@ -165,7 +165,7 @@ require([
                 $("#stopAppBtn").attr("disabled", false);
                 var api_location = "http://" + window.location.hostname + ":" + this.model.get('api_port') + "/api/";
                 debug(api_location);
-                var link = $("<a></a>").attr("href", api_location).text(api_location);
+                var link = $("<a target='_blank'></a>").attr("href", api_location).text(api_location);
                 $("#rootAppApiLink").html(link);
             } else {
                 $("#startAppBtn").attr("disabled", false);
@@ -528,9 +528,10 @@ require([
     }
 
     function initSubView(model) {
-        if (typeof App.AppNotificationsView != 'undefined') {
-            debug("initializing subview")
-            new App.AppNotificationsView({model: model});
+        if (typeof App.SubView != 'undefined') {
+            debug("initializing subview");
+            var view = new App.SubView({model: model});
+
         }
     }
 

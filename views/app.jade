@@ -23,18 +23,15 @@ div.span13
                     li(class=(sub_view == 'plugins') ? 'active' : '')
                         - var appLink = '/app/' + app.id + '/plugins/'
                         a(href=appLink) Plugins
-            div.well.control-group
+            legend Actions
+            div.control-group
                 p
                     button.btn.btn-primary#startAppBtn Start
                     button.btn.btn-danger(disabled="true")#stopAppBtn Stop
-
-                p.form-inline
-                    label.checkbox
-                        input(type="checkbox")#routesArePublished
-                        | Routes Published
-
                 p
-                    button.btn.btn-danger.btn-small#deleteAppBtn Delete
+                    button.btn.btn-danger.btn-small#deleteAppBtn
+                        i.icon-white.icon-trash
+                        | &nbsp;Delete Application
         div.span10
             - if (sub_view == 'objects')
                 include app.objects.jade
