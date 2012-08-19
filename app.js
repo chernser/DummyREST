@@ -262,17 +262,24 @@ app.put('/api/app/:appId/objtype/:objType', function (req, res) {
     app_storage.saveObjectType(req.params.appId, req.body, createResourceGetter(res));
 });
 
-app.get('/api/app/:appId/objetype/:objType', function (req, res) {
+app.get('/api/app/:appId/objetype/:id', function (req, res) {
     console.log("Getting object type ", req.params.id, " from application ", req.params.appId);
 
-    app_storage.getObjectType(req.params.appId, req.params.objType, createResourceGetter(res));
+    app_storage.getObjectType(req.params.appId, req.params.id, createResourceGetter(res));
 });
 
-app.delete('/api/app/:appId/objtype/:objType', function (req, res) {
+var empty_object = {};
+app.delete('/api/app/:appId/objtype/:id', function (req, res) {
     console.log("Removing object type", req.params.id, " from application ", req.params.appId);
 
-    app_storage.deleteObjectType(req.params.appId, req.params.name, function () {
-        res.send(200);
+    app_storage.deleteObjectType(req.params.appId, req.params.id, function (err) {
+        if (err == 'not_found') {
+            res.send(404);
+        } else if (err != null) {
+            res.send(500);
+        } else {
+            res.send(empty_object);  // TODO: backbone expects json response event for delete
+        }
     })
 });
 

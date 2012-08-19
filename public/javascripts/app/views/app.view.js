@@ -217,7 +217,8 @@ require([
             'click #createObjectInstance':'onCreateObjectInstance',
             'click #removeObjectBtn':'onRemoveObjectInstance',
             'change #idField': 'onIdFieldChange',
-            'click #saveRoutePatternBtn' : 'onSaveRoutePattern'
+            'click #saveRoutePatternBtn' : 'onSaveRoutePattern',
+            'click #deleteObjectType' : 'onDeleteObjectType'
         },
 
         onStartApp:function () {
@@ -481,6 +482,21 @@ require([
                     debug("Failed to save route_pattern ");
                 }
             });
+        },
+
+        onDeleteObjectType: function() {
+            debug("Delete object type");
+            var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
+            selectedObjectTypeModel.id = this.selectedObjectType.name;
+            selectedObjectTypeModel.destroy({
+                success: function() {
+                    window.location.reload(true);
+                },
+
+                error: function() {
+                    debug("Failed to delete object type");
+                }
+            })
         }
 
     });

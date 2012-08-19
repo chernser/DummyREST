@@ -95,7 +95,7 @@ AppApi.prototype.init = function () {
         });
     }
 
-    var API_PATTERN = /^\/api\/((\w+\/?)+)/;
+    var API_PATTERN = /^\/api\/+((\w+\/?)+)/;
     var getDefaultCallback = function (res) {
         return function (err, object) {
             if (err != null) {
@@ -104,11 +104,23 @@ AppApi.prototype.init = function () {
                 if (object != null) {
                     res.json(object);
                 } else {
-                    res.send(200);
+                    res.send(404);
                 }
             }
         }
     };
+
+
+    app.options('*', function(req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Credentials', true);
+        res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELTE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, X-Parse-REST-API-Key, X-Parse-Application-Id');
+
+        // TODO: move custom fields to configuration
+
+        res.send(200);
+    });
 
     app.get('/api/', function (req, res) {
         app_storage.getApplication(app_id, function (application) {
@@ -139,22 +151,27 @@ AppApi.prototype.init = function () {
     });
 
     app.get(API_PATTERN, function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         api.handleGet(req.params[0], getDefaultCallback(res));
     });
 
     app.post(API_PATTERN, function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         api.handlePost(req.params[0], req.body, getDefaultCallback(res));
     });
 
     app.put(API_PATTERN, function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         api.handlePut(req.params[0], req.body, getDefaultCallback(res));
     });
 
     app.delete(API_PATTERN, function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         api.handleDelete(req.params[0], getDefaultCallback(res));
     });
 
     app.get('/', function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         res.render('app_index', {title:'Application ' + app_id});
 
     });
@@ -162,9 +179,12 @@ AppApi.prototype.init = function () {
 
     console.log("socket.io port: ", this.socket_io_port);
     app.get('/socket_test/', function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
         res.render('socket_io_test', { title:'Application ' + app_id,
             app_id:app_id, socket_io_port:api.socket_io_port});
     });
+
+
 };
 
 
@@ -248,9 +268,9 @@ AppApi.prototype.handleGet = function (url, callback) {
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
         id = getObjectId(id, objectType);
-
+        console.log("Object id: ", id);
         api.app_storage.getObjectInstances(api.app_id, objectType.name, id, function (resources) {
-            if (typeof resources != 'undefined' && resources != null && resources.length > 0) {
+            if (typeof resources != 'undefined' && resources != null && resources.length >= 0) {
                 if (id == null) {
                     var response = [];
                     for (var index in resources) {

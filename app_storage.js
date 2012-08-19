@@ -234,6 +234,10 @@ AppStorage.prototype = {
             throw new Error("Empty object type name");
         }
 
+        if (typeof objectType.route_pattern != 'string') {
+            objectType.route_pattern = '/' + objectType.name + '/{id}/';
+        }
+
         var storage = this;
         storage.getApplication(appId, function (application) {
 
@@ -285,7 +289,7 @@ AppStorage.prototype = {
                 return;
             }
 
-
+            console.log(application);
             for (var index in application.objtypes) {
                 if (application.objtypes[index].route_pattern == routePattern) {
                     if (typeof callback == 'function') {
@@ -315,6 +319,7 @@ AppStorage.prototype = {
 
             if (doUpdate) {
                 storage.saveApplication(application, function () {
+
                     if (typeof callback == 'function') {
                         callback(null, objectType);
                     }
@@ -334,19 +339,24 @@ AppStorage.prototype = {
         storage.getApplication(appId, function (application) {
 
             var doUpdate = false;
+            var newObjectTypesList = [];
+            // TODO: rework
             for (var index in application.objtypes) {
-                if (application.objtypes[index].name == objectType.name) {
-                    delete application.objtypes[index];
+                if (application.objtypes[index].name == objectTypeName) {
                     doUpdate = true;
-                    break;
+                    continue;
                 }
+                newObjectTypesList.push(application.objtypes[index]);
             }
 
-
+            console.log("Deleting object type: ", objectTypeName, application);
             if (doUpdate) {
+                application.objtypes = newObjectTypesList;
                 storage.saveApplication(application, function () {
+                    var resource_collection = storage.getResourceCollection(appId);
+                    resource_collection.remove({__objectType: objectTypeName});
                     if (typeof callback == 'function') {
-                        callback(null, objectType);
+                        callback(null, true);
                     }
                 });
             } else {
@@ -391,19 +401,22 @@ AppStorage.prototype = {
         var query = { __objectType: objectTypeName};
 
         if (typeof instanceId != 'undefined' && instanceId != null) {
-
             var id = instanceId;
             var id_field = "_id";
             if (typeof instanceId.field != 'undefined') {
                 id_field = instanceId.field;
-                id = instanceId.id;
+                id = parseInt(instanceId.id);
             }
 
             if (id_field == "_id") {
                 id = this.createIdObject(id);
             }
 
-            query[id_field] = id;
+
+            query[id_field] = parseInt(id);
+            if (query[id_field] == NaN) {
+                query[id_field] = id;
+            }
         }
 
         return query;
@@ -442,11 +455,12 @@ AppStorage.prototype = {
         var collection = this.getResourceCollection(appId);
         var query = this.createInstanceQuery(instanceId, objectTypeName);
         if (query == null) {
-            if (typeof callback == 'function')
-            callback(null);
+            if (typeof callback == 'function') {
+                callback(null);
+            }
             return;
         }
-
+        console.log('query: ', query);
         collection.find(query, function (err, cursor) {
             if (err != null) {
                 throw err;
