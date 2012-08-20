@@ -420,6 +420,7 @@ AppStorage.prototype = {
                 }
             }
         }
+
         return query;
     },
 
