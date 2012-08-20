@@ -1,0 +1,16 @@
+div.row-fluid#plugin_view
+    div.form.well
+        legend Publishing routes
+        div.control-group
+            label.control-label Server IP:Port
+            div.controls
+                div.input-append
+                    input#serverStr(size="16", type="text")
+                    | <button class="btn" id="serverPingButton">Ping
+                    | </button><button class="btn" id="addToListBtn"><i class="icon-plus "></i>
+                    | </button><button class="btn" id="addToListBtn"><i class="icon-minus "></i>
+                    | </button>
+        div.contol-group
+            button.btn#publishRoutesButton Publish
+            button.btn#unpublishRoutesButton UnPublish
+script(type='text/javascript', src='/javascripts/plugins/apollo_web/index.js')

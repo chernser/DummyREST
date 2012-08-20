@@ -262,17 +262,24 @@ app.put('/api/app/:appId/objtype/:objType', function (req, res) {
     app_storage.saveObjectType(req.params.appId, req.body, createResourceGetter(res));
 });
 
-app.get('/api/app/:appId/objetype/:objType', function (req, res) {
+app.get('/api/app/:appId/objetype/:id', function (req, res) {
     console.log("Getting object type ", req.params.id, " from application ", req.params.appId);
 
-    app_storage.getObjectType(req.params.appId, req.params.objType, createResourceGetter(res));
+    app_storage.getObjectType(req.params.appId, req.params.id, createResourceGetter(res));
 });
 
-app.delete('/api/app/:appId/objtype/:objType', function (req, res) {
+var empty_object = {};
+app.delete('/api/app/:appId/objtype/:id', function (req, res) {
     console.log("Removing object type", req.params.id, " from application ", req.params.appId);
 
-    app_storage.deleteObjectType(req.params.appId, req.params.name, function () {
-        res.send(200);
+    app_storage.deleteObjectType(req.params.appId, req.params.id, function (err) {
+        if (err == 'not_found') {
+            res.send(404);
+        } else if (err != null) {
+            res.send(500);
+        } else {
+            res.send(empty_object);  // TODO: backbone expects json response event for delete
+        }
     })
 });
 
@@ -287,11 +294,8 @@ app.post('/api/app/:appId/:objType/', function (req, res) {
 
 app.get('/api/app/:appId/:objType/:id?', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-        if (typeof req.params.id == 'undefined') {
-            app_storage.getObjectInstances(req.params.appId, objectType.name, createResourceGetter(res));
-        } else {
-            app_storage.getObjectInstance(req.params.appId, objectType.name, req.params.id, createResourceGetter(res));
-        }
+        var id = typeof req.params.id == 'undefined'? null : req.params.id;
+        app_storage.getObjectInstances(req.params.appId, objectType.name, id, createResourceGetter(res));
     });
 });
 
@@ -299,14 +303,15 @@ app.get('/api/app/:appId/:objType/:id?', function (req, res) {
 app.put('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
         var getter = createResourceGetter(res, 'updated', req.params.appId);
-        app_storage.saveObjectInstance(req.params.appId, objectType.name, req.body, getter);
+        var instanceId = {id_field: '_id', id: req.params.id};
+        app_storage.saveObjectInstance(req.params.appId, objectType.name, instanceId, req.body, getter);
     });
 });
 
 app.delete('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-
-        app_storage.deleteObjectInstance(req.params.appId, objectType.name, req.params.id, function() {
+        var instanceId = {id_field: '_id', id: req.params.id};
+        app_storage.deleteObjectInstance(req.params.appId, objectType.name, instanceId, function() {
             ApplicationController.notifyResourceDeleted(req.params.appId, {_id: req.params.id});
             res.send(200);
         });
