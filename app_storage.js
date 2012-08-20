@@ -39,9 +39,11 @@ function getNextAppResId(db, appId, callback) {
 
 function AppStorage(callback) {
     // Imports
-    var mongo_db = require("mongodb");
+    var mongo_db = require("mongodb"),
+        crypto = require("crypto");
 
     this.ObjectID = mongo_db.ObjectID;
+    this.crypto = crypto;
 
     // Local
     this.db = new mongo_db.Db("application_storage",
@@ -229,6 +231,15 @@ AppStorage.prototype = {
         });
     },
 
+    regenerateAuthToken:function (applicationId, callback) {
+        if (this.db.state != 'connected') throw 'db not connected';
+
+        this.crypto.randomBytes(48, function (ex, buff) {
+            var newToken = buff.toString('hex');
+            console.log("new token: ", newToken);
+        });
+    },
+
     addObjectType:function (appId, objectType, callback) {
         if (typeof objectType.name == 'undefined' || objectType.name == '') {
             throw new Error("Empty object type name");
@@ -264,7 +275,7 @@ AppStorage.prototype = {
     getObjectType:function (appId, objectTypeName, callback) {
         var storage = this;
         storage.getApplication(appId, function (application) {
-            if (typeof application == 'undefined')  {
+            if (typeof application == 'undefined') {
                 callback('not_found', null);
                 return;
             }
@@ -281,7 +292,7 @@ AppStorage.prototype = {
         });
     },
 
-    getObjectTypeByRoute: function(appId, routePattern, callback) {
+    getObjectTypeByRoute:function (appId, routePattern, callback) {
         var storage = this;
         storage.getApplication(appId, function (application) {
             if (typeof application == 'undefined') {
@@ -354,7 +365,7 @@ AppStorage.prototype = {
                 application.objtypes = newObjectTypesList;
                 storage.saveApplication(application, function () {
                     var resource_collection = storage.getResourceCollection(appId);
-                    resource_collection.remove({__objectType: objectTypeName});
+                    resource_collection.remove({__objectType:objectTypeName});
                     if (typeof callback == 'function') {
                         callback(null, true);
                     }
@@ -388,17 +399,17 @@ AppStorage.prototype = {
         });
     },
 
-    createIdObject: function(id) {
+    createIdObject:function (id) {
         try {
             return this.ObjectID.createFromHexString(id);
-        } catch (e ) {
+        } catch (e) {
             console.log(e);
-           return null;
+            return null;
         }
     },
 
-    createInstanceQuery: function(instanceId, objectTypeName) {
-        var query = { __objectType: objectTypeName};
+    createInstanceQuery:function (instanceId, objectTypeName) {
+        var query = { __objectType:objectTypeName};
 
         if (typeof instanceId != 'undefined' && instanceId != null) {
             var id = instanceId;
@@ -518,37 +529,46 @@ AppStorage.prototype = {
     },
 
 
-
     // Db Migration updates
-    migrate: function(appId) {
-
-        this.setDefaultRoutePatternForObjectTypes(appId);
-    },
-
-    setDefaultRoutePatternForObjectTypes: function(appId) {
+    migrate:function (appId) {
         var storage = this;
 
-        storage.getApplication(appId, function(application) {
+        storage.getApplication(appId, function (application) {
             if (application == null) {
                 console.log("Failed to migrate db for application: ", appId);
                 return;
             }
 
-            var update = false;
-            for (var index in application.objtypes) {
-                if (typeof application.objtypes[index].route_pattern == 'undefined') {
-                    application.objtypes[index].route_pattern = '/' + application.objtypes[index].name + '/{id}/';
 
-                    update = true;
-                }
-            }
+            storage.setDefaultRoutePatternForObjectTypes(application, storage);
+            storage.setAccessToken(application, storage);
 
             storage.saveApplication(application);
         });
+
+    },
+
+    setDefaultRoutePatternForObjectTypes:function (application, storage) {
+        var update = false;
+        for (var index in application.objtypes) {
+            if (typeof application.objtypes[index].route_pattern == 'undefined') {
+                application.objtypes[index].route_pattern = '/' + application.objtypes[index].name + '/{id}/';
+
+                update = true;
+            }
+        }
+    },
+
+
+    setAccessToken:function (application, storage) {
+        if (typeof application.access_token == 'undefined' ) {
+            application.access_token = storage.crypto.randomBytes(24).toString("hex");
+            console.log("application:access_token set: ", application.access_token);
+        }
     }
 
 
-}
+};
 
 module.exports = function (callback) {
 
