@@ -10,10 +10,19 @@ require([
             this.$el = $("#sub_view");
             this.model = attributes.model;
 
-            var notificationTestPageUrl = "http://" + window.location.hostname + ':' + (8100 + this.model.get("id")) + '/socket_test/';
-            $("#notificationTestPageLink").attr("href", notificationTestPageUrl);
+            this.notificationApiUrl = "http://" + window.location.hostname + ':' + (8100 + this.model.get("id")) + '/socket_test/';
+            $("#notificationTestPageLink").attr("href", this.notificationApiUrl);
 
             this.updateProxyFunction();
+
+            this.updateSendNotificationPanel();
+
+            var view = this;
+            this.model.on("change", function () {
+                if (view.model.hasChanged("state")) {
+                    view.updateSendNotificationPanel();
+                }
+            });
         },
 
         DEFAULT_PROXY_CODE:""
@@ -29,8 +38,20 @@ require([
             $("#notifyProxyFunction").val(code);
         },
 
+        updateSendNotificationPanel: function() {
+            if (this.model.get("state") == 'started') {
+                $("#sendNotificationForm").removeClass("hidden");
+                $("#sendNotificationFormPlaceholder").addClass("hidden");
+            } else {
+                $("#sendNotificationForm").addClass("hidden");
+                $("#sendNotificationFormPlaceholder").removeClass("hidden");
+            }
+
+        },
+
         events:{
-            'click #saveNotifyProxyFunction':'onSaveNotifyProxyFunction'
+            'click #saveNotifyProxyFunction':'onSaveNotifyProxyFunction',
+            'click #sendNotification':'onSendEvent'
 
         },
 
@@ -40,16 +61,16 @@ require([
             try {
                 var code = $("#notifyProxyFunction").val();
                 eval(code);
-                var result = proxy({name: 'test_event', type: 'msg'}, {id: 123, value: 333});
+                var result = proxy({name:'test_event', type:'msg'}, {id:123, value:333});
                 $("#proxySimpleTestOutput").html("<b>Simple test result: </b>" + JSON.stringify(result));
                 this.model.set("notify_proxy_fun", code);
                 this.model.save(null, {
-                    success: function() {
+                    success:function () {
                         debug("Model saved");
                         $("#saveNotifyProxyFunction").text("Saved");
                     },
 
-                    error: function() {
+                    error:function () {
                         debug("Failed to save notify proxy function");
                         $("#saveNotifyProxyFunction").text("Save again").addClass("danger");
                     }
@@ -58,6 +79,30 @@ require([
                 debug("Something bad happened: ", e.toString());
 
             }
+        },
+
+        onSendEvent:function () {
+            var event = {name:$("#eventName").val(), data:$("#eventData").val()};
+            debug("Sending event: ", event);
+
+
+            $.ajax({
+                url: this.notificationApiUrl + 'event',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(event),
+                type: 'POST',
+                success: function() {
+                    debug("event sent");
+                    $("#sendResult").text("Sent OK.");
+                },
+
+                error: function() {
+                    debug("Failed to send event");
+                    $("#sendResult").text("Sent BAD.");
+                }
+
+            })
         }
     });
 });

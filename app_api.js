@@ -111,7 +111,7 @@ AppApi.prototype.init = function () {
     };
 
 
-    app.options('*', function(req, res) {
+    app.options('*', function (req, res) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', true);
         res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELTE, OPTIONS');
@@ -184,6 +184,23 @@ AppApi.prototype.init = function () {
             app_id:app_id, socket_io_port:api.socket_io_port});
     });
 
+    app.post('/socket_test/event', function (req, res) {
+        res.header('Access-Control-Allow-Origin', '*');
+
+        if (req.is('application/json')) {
+            var event = req.body;
+            console.log("Sending event: ", event);
+            if (typeof event.name == 'string' && typeof event.data != 'undefined') {
+                api.send_event(event.name, event.data);
+                res.send(204);
+            } else {
+                res.send(405);
+            }
+        } else {
+            res.send(405);
+        }
+
+    });
 
 };
 

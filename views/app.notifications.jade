@@ -17,18 +17,21 @@ div.row#sub_view
                 button.btn#saveNotifyProxyFunction Save
         br
         legend Sending Custom Notifications
-        div.form
+        div#sendNotificationFormPlaceholder
+            h4 Start application to send notifications
+        div.form.hidden#sendNotificationForm
             div.control-group
                 label
                     b Event name
                 div.controls
-                    input(type="text", value="Test:Event")
+                    input#eventName(type="text", value="Test:Event")
             div.control-group
                 label
                     b Data
                 div.controls
                     - var notifyData = { value: "test" }
-                    textarea.span5(rows=7)#notificationData!=JSON.stringify(notifyData, null, 4)
+                    textarea.span5(rows=7)#eventData!=JSON.stringify(notifyData, null, 4)
             div.btn-group
                 button.btn#sendNotification Send
+            i#sendResult
     script(type='text/javascript', src='/javascripts/app/views/app.notifications.view.js')
