@@ -303,13 +303,15 @@ app.get('/api/app/:appId/:objType/:id?', function (req, res) {
 app.put('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
         var getter = createResourceGetter(res, 'updated', req.params.appId);
-        app_storage.saveObjectInstance(req.params.appId, objectType.name, req.body, getter);
+        var instanceId = {id_field: '_id', id: req.params.id};
+        app_storage.saveObjectInstance(req.params.appId, objectType.name, instanceId, req.body, getter);
     });
 });
 
 app.delete('/api/app/:appId/:objType/:id', function (req, res) {
     app_storage.getObjectType(req.params.appId, req.params.objType, function (err, objectType) {
-        app_storage.deleteObjectInstance(req.params.appId, objectType.name, req.params.id, function() {
+        var instanceId = {id_field: '_id', id: req.params.id};
+        app_storage.deleteObjectInstance(req.params.appId, objectType.name, instanceId, function() {
             ApplicationController.notifyResourceDeleted(req.params.appId, {_id: req.params.id});
             res.send(200);
         });

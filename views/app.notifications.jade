@@ -3,11 +3,9 @@ div.row#sub_view
     div.span10
         h2 Socket.io Notification Configuration
         a#notificationTestPageLink(href="#", target="new") Notifications Test Page
-        hr
+        legend Notification Proxy function
         div.form
             div.control-group
-                label
-                    b Notification Proxy Function
                 div.controls
                     textarea.span5(rows = 7)#notifyProxyFunction
                     i.help-inline
@@ -17,4 +15,20 @@ div.row#sub_view
                     p#proxySimpleTestOutput
             div.btn-group
                 button.btn#saveNotifyProxyFunction Save
+        br
+        legend Sending Custom Notifications
+        div.form
+            div.control-group
+                label
+                    b Event name
+                div.controls
+                    input(type="text", value="Test:Event")
+            div.control-group
+                label
+                    b Data
+                div.controls
+                    - var notifyData = { value: "test" }
+                    textarea.span5(rows=7)#notificationData!=JSON.stringify(notifyData, null, 4)
+            div.btn-group
+                button.btn#sendNotification Send
     script(type='text/javascript', src='/javascripts/app/views/app.notifications.view.js')

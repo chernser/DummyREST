@@ -218,7 +218,8 @@ require([
             'click #removeObjectBtn':'onRemoveObjectInstance',
             'change #idField': 'onIdFieldChange',
             'click #saveRoutePatternBtn' : 'onSaveRoutePattern',
-            'click #deleteObjectType' : 'onDeleteObjectType'
+            'click #deleteObjectType' : 'onDeleteObjectType',
+            'click #touchObjectBtn' : 'onObjectTouch'
         },
 
         onStartApp:function () {
@@ -258,11 +259,6 @@ require([
                     debug("failed to create new object type");
                 }
             });
-
-
-        },
-
-        onDeleteObjectType:function () {
 
 
         },
@@ -497,6 +493,14 @@ require([
                     debug("Failed to delete object type");
                 }
             })
+        },
+
+        onObjectTouch: function() {
+            var instance = this.getSelectedInstance();
+            debug("Touching instance: ", instance);
+
+            var instance_def = JSON.stringify(instance, null, 4);
+            this.updateOrCreateObjectInstance(instance_def, true);
         }
 
     });

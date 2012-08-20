@@ -268,7 +268,6 @@ AppApi.prototype.handleGet = function (url, callback) {
         var proxy = getProxy(objectType, api.DEFAULT_RESOURCE_PROXY);
 
         id = getObjectId(id, objectType);
-        console.log("Object id: ", id);
         api.app_storage.getObjectInstances(api.app_id, objectType.name, id, function (resources) {
             if (typeof resources != 'undefined' && resources != null && resources.length >= 0) {
                 if (id == null) {

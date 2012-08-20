@@ -403,22 +403,23 @@ AppStorage.prototype = {
         if (typeof instanceId != 'undefined' && instanceId != null) {
             var id = instanceId;
             var id_field = "_id";
-            if (typeof instanceId.field != 'undefined') {
-                id_field = instanceId.field;
-                id = parseInt(instanceId.id);
+            if (typeof instanceId.id_field != 'undefined') {
+                id_field = instanceId.id_field;
+                id = instanceId.id;
             }
 
             if (id_field == "_id") {
-                id = this.createIdObject(id);
-            }
-
-
-            query[id_field] = parseInt(id);
-            if (query[id_field] == NaN) {
-                query[id_field] = id;
+                query[id_field] = this.createIdObject(id);
+            } else {
+                // Handle converting integer values
+                var tmpId = parseInt(id);
+                if (tmpId == NaN) {
+                    query[id_field] = id;
+                } else {
+                    query[id_field] = tmpId;
+                }
             }
         }
-
         return query;
     },
 
@@ -432,6 +433,7 @@ AppStorage.prototype = {
                 callback(null);
             return;
         }
+
 
         delete instance['_id'];
         instance.__objectType = objectTypeName;
