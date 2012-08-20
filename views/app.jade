@@ -1,10 +1,12 @@
 
 script(type='text/javascript')
     var applicationId = #{app.id};
-div.span12
+div.span13
     div.row
         div.span10
             h2= app.name
+                small(style="margin-left: 1em") API:&nbsp;
+                small#rootAppApiLink
     div.row#view
         div.span2
             div.well
@@ -18,26 +20,27 @@ div.span12
                     li(class=(sub_view == 'notifications') ? 'active' : '')
                         - var appLink = '/app/' + app.id + '/notifications/'
                         a(href=appLink) Notifications
-            div.well.control-group
+                    li(class=(sub_view == 'plugins') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/plugins/'
+                        a(href=appLink) Plugins
+            legend Actions
+            div.control-group
                 p
                     button.btn.btn-primary#startAppBtn Start
                     button.btn.btn-danger(disabled="true")#stopAppBtn Stop
-                    p
-                        a(href="http://:8100/api/", target="new")#rootAppApiLink
-                p.form-inline
-                    label.checkbox
-                        input(type="checkbox")#routesArePublished
-                        | Routes Published
-
                 p
-                    button.btn.btn-danger.btn-small#deleteAppBtn Delete
-        div.span7
+                    button.btn.btn-danger.btn-small#deleteAppBtn
+                        i.icon-white.icon-trash
+                        | &nbsp;Delete Application
+        div.span10
             - if (sub_view == 'objects')
                 include app.objects.jade
             - else if (sub_view == 'testsuites')
                 include app.testsuites.jade
             - else if (sub_view == 'notifications')
                 include app.notifications.jade
+            - else if (sub_view == 'plugins')
+                include app.plugins.jade
             - else
                 h1 Please select category
     script(type='text/javascript', src='/javascripts/app/views/app.view.js')
