@@ -230,7 +230,7 @@ function getProxy(objectType, defaultProxy) {
 
 function getObjectId(id, objectType) {
     if (typeof id != 'undefined' && id != null && id != '') {
-        return typeof objectType.id_field != 'undefined' ? {field:objectType.id_field, id:id} : id;
+        return typeof objectType.id_field != 'undefined' ? {id_field:objectType.id_field, id:id} : id;
     } else {
         return null;
     }
