@@ -24,13 +24,13 @@ require([
             });
 
 
-            $("textarea").keydown(function(objEvent) {
+            $("textarea").keydown(function (objEvent) {
                 if (objEvent.keyCode == 9) {  //tab pressed
                     var identHolder = "    ";
                     var startPos = this.selectionStart;
                     var endPos = this.selectionEnd;
                     var scrollTop = this.scrollTop;
-                    this.value = this.value.substring(0, startPos) + identHolder + this.value.substring(endPos,this.value.length);
+                    this.value = this.value.substring(0, startPos) + identHolder + this.value.substring(endPos, this.value.length);
                     this.focus();
                     this.selectionStart = startPos + identHolder.length;
                     this.selectionEnd = startPos + identHolder.length;
@@ -49,6 +49,11 @@ require([
                     {name:""}
                 ], "/");
             }
+
+
+            this.model.on('change', function() {
+                view.updateState();
+            });
         },
 
 
@@ -79,7 +84,6 @@ require([
 
                 $("#idField").append("<option value='" + field + "'>" + field + "</option>");
             }
-
 
 
             var options = {
@@ -159,13 +163,16 @@ require([
         updateState:function () {
 
             $("#routesArePublished").attr("checked", this.model.get("routes_are_published") ? "checked" : null);
+            $("#appAccessToken").val(this.model.get('access_token'));
 
             if (this.model.get('state') == 'started') {
                 $("#startAppBtn").attr("disabled", true);
                 $("#stopAppBtn").attr("disabled", false);
                 var api_location = "http://" + window.location.hostname + ":" + this.model.get('api_port') + "/api/";
+                var lnkText = api_location + '...';
+                api_location += '?access_token=' + this.model.get("access_token");
                 debug(api_location);
-                var link = $("<a target='_blank'></a>").attr("href", api_location).text(api_location);
+                var link = $("<a target='_blank'></a>").attr("href", api_location).text(lnkText);
                 $("#rootAppApiLink").html(link);
             } else {
                 $("#startAppBtn").attr("disabled", false);
@@ -216,10 +223,11 @@ require([
             'click #saveObjectInstance':'onSaveObjectInstance',
             'click #createObjectInstance':'onCreateObjectInstance',
             'click #removeObjectBtn':'onRemoveObjectInstance',
-            'change #idField': 'onIdFieldChange',
-            'click #saveRoutePatternBtn' : 'onSaveRoutePattern',
-            'click #deleteObjectType' : 'onDeleteObjectType',
-            'click #touchObjectBtn' : 'onObjectTouch'
+            'change #idField':'onIdFieldChange',
+            'click #saveRoutePatternBtn':'onSaveRoutePattern',
+            'click #deleteObjectType':'onDeleteObjectType',
+            'click #touchObjectBtn':'onObjectTouch',
+            'click #renewAccessTokenBtn':'onRenewAccessToken'
         },
 
         onStartApp:function () {
@@ -263,7 +271,7 @@ require([
 
         },
 
-        getObjectTypeRoute: function (objectType) {
+        getObjectTypeRoute:function (objectType) {
             return typeof objectType.route_pattern != 'undefined' ? objectType.route_pattern : '/' + objectType.name + '/{id}/';
         },
 
@@ -439,25 +447,25 @@ require([
             })
         },
 
-        onIdFieldChange: function() {
+        onIdFieldChange:function () {
             var idField = $("#idField").val();
             debug("changing id field to: ", idField);
 
             this.selectedObjectType.id_field = idField;
             var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
-            selectedObjectTypeModel.save({id: this.selectedObjectType.name}, {
-                success: function(model) {
+            selectedObjectTypeModel.save({id:this.selectedObjectType.name}, {
+                success:function (model) {
                     debug("idField is set for ", model.get('name'));
                 },
 
-                error: function() {
+                error:function () {
                     debug("Failed to set id field");
                 }
             })
 
         },
 
-        onSaveRoutePattern: function()  {
+        onSaveRoutePattern:function () {
             var route_pattern = $("#routePattern").val();
             if (route_pattern.charAt(route_pattern.length - 1) != '/') {
                 route_pattern += '/';
@@ -469,38 +477,56 @@ require([
 
             debug(this.selectedObjectType);
             var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
-            selectedObjectTypeModel.save({id: this.selectedObjectType.name}, {
-                success: function(model)  {
+            selectedObjectTypeModel.save({id:this.selectedObjectType.name}, {
+                success:function (model) {
                     debug("route_pattern saved");
                 },
 
-                error: function() {
+                error:function () {
                     debug("Failed to save route_pattern ");
                 }
             });
         },
 
-        onDeleteObjectType: function() {
+        onDeleteObjectType:function () {
             debug("Delete object type");
             var selectedObjectTypeModel = new App.ObjectTypeModel(this.selectedObjectType);
             selectedObjectTypeModel.id = this.selectedObjectType.name;
             selectedObjectTypeModel.destroy({
-                success: function() {
+                success:function () {
                     window.location.reload(true);
                 },
 
-                error: function() {
+                error:function () {
                     debug("Failed to delete object type");
                 }
             })
         },
 
-        onObjectTouch: function() {
+        onObjectTouch:function () {
             var instance = this.getSelectedInstance();
             debug("Touching instance: ", instance);
 
             var instance_def = JSON.stringify(instance, null, 4);
             this.updateOrCreateObjectInstance(instance_def, true);
+        },
+
+        onRenewAccessToken:function () {
+            var app = this.model;
+            $.ajax({
+                url:'/api/app/' + app.id + '/access_token/',
+                type: 'POST',
+                dataType: 'json',
+
+                success:function(data ) {
+                    app.set('access_token', data.new_token);
+                },
+
+                error: function() {
+                }
+
+            });
+
         }
 
     });
@@ -550,7 +576,7 @@ require([
     function initSubView(model) {
         if (typeof App.SubView != 'undefined') {
             debug("initializing subview");
-            var view = new App.SubView({model: model});
+            var view = new App.SubView({model:model});
 
         }
     }

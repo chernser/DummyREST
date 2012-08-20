@@ -231,12 +231,19 @@ AppStorage.prototype = {
         });
     },
 
-    regenerateAuthToken:function (applicationId, callback) {
+    renewAccessToken:function (applicationId, callback) {
         if (this.db.state != 'connected') throw 'db not connected';
 
-        this.crypto.randomBytes(48, function (ex, buff) {
-            var newToken = buff.toString('hex');
-            console.log("new token: ", newToken);
+        var storage = this;
+        storage.getApplication(applicationId, function(application) {
+            var new_token = storage.crypto.randomBytes(24).toString('hex');
+            application.access_token = new_token;
+
+            storage.saveApplication(application, function() {
+                if (typeof callback == 'function') {
+                    callback(null, new_token);
+                }
+            });
         });
     },
 
