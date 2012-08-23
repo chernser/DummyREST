@@ -1,24 +1,18 @@
-
 function debug() {
-    if (typeof window.console != 'undefined') {
-        window.console.log.apply(window.console, arguments);
-    }
+  if (typeof window.console != 'undefined') {
+    window.console.log.apply(window.console, arguments);
+  }
 }
 
 App = {
-    app: "myApp"
+  app: "myApp"
 };
 
 require([
-    'application.model',
-    'testsuite.model'
-],
-    function() {
-        debug("Application loaded");
-
-
-    }
-
-
-
+  'application.model',
+  'testsuite.model'
+  ],
+  function() {
+    debug("Application loaded");
+  }
 );

@@ -1,14 +1,8 @@
 App.ApplicationModel = Backbone.Model.extend({
 
-    urlRoot:'/api/app/',
+  urlRoot:'/api/app/',
 
-
-    validate:function () {
-
-        if (!_.isString(this.name)) false;
-    }
+  validate:function () {
+    if (!_.isString(this.name)) return false;
+  }
 });
-
-
-
-
