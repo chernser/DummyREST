@@ -29,6 +29,26 @@ function getAppNextId(db, callback) {
 }
 
 /**
+ * [generateMongoUrl creates a mongoDb-formatted url]
+ * @param  {[type]} dbConfig [description]
+ * @return {[type]}          [description]
+ */
+var generateMongoUrl = function(dbConfig){
+  dbConfig.hostname = (dbConfig.hostname || 'localhost');
+  dbConfig.port = (dbConfig.port || 27017);
+  dbConfig.db = (dbConfig.db || 'test');
+
+  if(dbConfig.username && dbConfig.password) {
+    return "mongodb://" + dbConfig.username +
+      ":" + dbConfig.password + "@" + dbConfig.hostname + ":" +
+      dbConfig.port + "/" + dbConfig.db;
+  } else {
+    return "mongodb://" + dbConfig.hostname + ":" + dbConfig.port +
+      "/" + dbConfig.db;
+  }
+};
+
+/**
  * [getNextAppResId description]
  * @param  {[type]}   db       [description]
  * @param  {[type]}   appId    [description]
@@ -49,19 +69,33 @@ function getNextAppResId(db, appId, callback) {
 }
 
 /**
+ * [ensureIndecies description]
+ * @param  {Function} callback [description]
+ * @return {[type]}            [description]
+ */
+function ensureIndecies(callback) {
+
+  callback();
+}
+
+/**
  * [AppStorage description]
  * @param {Function} callback [description]
  */
 function AppStorage(callback) {
   // Imports
   var mongo_db = require("mongodb");
+  var config = require('./config');
 
   this.ObjectID = mongo_db.ObjectID;
 
-  // Local
-  this.db = new mongo_db.Db("application_storage",
-    new mongo_db.Server('localhost', 27017, {}), {});
-
+  // use config.js to load the mongoDb info
+  this.db = new mongo_db.Db(config.mongo.db,
+    new mongo_db.Server(config.mongo.server,
+      config.mongo.port,
+      {auto_reconnect: true, poolSize: 2}),
+      {native_parser: config.mongo.useNative}
+  );
 
   var ownCallback = function () {
     if (typeof callback == 'function') {
@@ -69,21 +103,43 @@ function AppStorage(callback) {
     }
   };
 
+  //TODO: fix the 'ensureIndex()'' duplication below. Horrible hack, but I'm tired.
+
   // Preparing db connection
   var that = this;
   this.db.open(function (err, db) {
-    if (err !== null) {
-      console.log("Db Error: ", err);
-      return null;
+    // authenticate if config.js has a username & password defined.
+    // TODO: add logic to validate against 'undefined' and so-on.
+    if(config.mongo.username !== '' && config.mongo.password !== '') {
+      this.db.authenticate(config.mongo.username, config.mongo.password, function(){
+
+        if (err !== null) {
+          console.log("Db Error: ", err);
+          return null;
+        }
+
+        that.db.ensureIndex('applications', {id:1}, {unique:true});
+        that.db.ensureIndex('sequences', {name:1}, {unique:true});
+        that.db.collection('sequences', function (err, collection) {
+          collection.insert({name:'appSeqNumber', value:1});
+        });
+
+        ownCallback();
+      });
+    } else {
+      if (err !== null) {
+        console.log("Db Error: ", err);
+        return null;
+      }
+
+      that.db.ensureIndex('applications', {id:1}, {unique:true});
+      that.db.ensureIndex('sequences', {name:1}, {unique:true});
+      that.db.collection('sequences', function (err, collection) {
+        collection.insert({name:'appSeqNumber', value:1});
+      });
+
+      ownCallback();
     }
-
-    that.db.ensureIndex('applications', {id:1}, {unique:true});
-    that.db.ensureIndex('sequences', {name:1}, {unique:true});
-    that.db.collection('sequences', function (err, collection) {
-      collection.insert({name:'appSeqNumber', value:1});
-    });
-
-    ownCallback();
   });
 
   return this;
@@ -696,6 +752,7 @@ AppStorage.prototype = {
 
 /**
  * [exports description]
+ * @param  {[type]}   config   [description]
  * @param  {Function} callback [description]
  * @return {[type]}            [description]
  */

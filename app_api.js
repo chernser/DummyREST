@@ -47,12 +47,11 @@ AppApi.prototype.DEFAULT_RESOURCE_PROXY = function (resource) {
 AppApi.prototype.init = function () {
   var express = require('express')
     , routes = require('./routes')
+    , socket_io = require('socket.io')
+    , api = this
     , app_storage = require('./app_storage.js')(function () {
       app_storage.migrate(api.app_id);
     });
-    , socket_io = require('socket.io')
-    , api = this;
-
 
   this.app = app = module.exports = express.createServer();
   this.app_storage = app_storage;

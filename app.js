@@ -5,6 +5,7 @@
 
 var express = require('express'),
   routes = require('./routes'),
+  config = require('./config'),
   app_storage = require('./app_storage.js')(function () {
     ApplicationController.startApplications();
   });
@@ -346,6 +347,6 @@ app.delete('/api/app/:appId/:objType/:id', function (req, res) {
 });
 
 // start the server
-app.listen(8100, function () {
+app.listen(config.webui.port, function () {
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
