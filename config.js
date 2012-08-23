@@ -13,6 +13,8 @@ config.mongo.db = 'application_storage';
 config.mongo.username = '';
 config.mongo.password = '';
 config.mongo.useNative = false;
+config.mongo.poolSize = 2;
+config.mongo.reconnect = true;
 
 /* express settings for webui
 */

@@ -69,16 +69,6 @@ function getNextAppResId(db, appId, callback) {
 }
 
 /**
- * [ensureIndecies description]
- * @param  {Function} callback [description]
- * @return {[type]}            [description]
- */
-function ensureIndecies(callback) {
-
-  callback();
-}
-
-/**
  * [AppStorage description]
  * @param {Function} callback [description]
  */
@@ -93,7 +83,7 @@ function AppStorage(callback) {
   this.db = new mongo_db.Db(config.mongo.db,
     new mongo_db.Server(config.mongo.server,
       config.mongo.port,
-      {auto_reconnect: true, poolSize: 2}),
+      {auto_reconnect: config.mongo.reconnect, poolSize: config.mongo.poolSize}),
       {native_parser: config.mongo.useNative}
   );
 
@@ -103,7 +93,8 @@ function AppStorage(callback) {
     }
   };
 
-  //TODO: fix the 'ensureIndex()'' duplication below. Horrible hack, but I'm tired.
+  //TODO: fix the 'ensureIndex()'' duplication below. Horrible hack,
+  // but I'm tired :)
 
   // Preparing db connection
   var that = this;
