@@ -1,20 +1,20 @@
 
 div.row#view
-  div.span6
-    div.offset1
-      h2 Create Application
-        div.well
-          fieldset
-            .control-group
-              label.control-label Appication Name
-            .controls
-              input#appName(value="Sample")
-          fieldset.control-group
-            button.btn#createAppBtn Create
-        h2 or Select Existing One
-          .well
-            ul.application-list
-              each app in applications
-                li
-                  a(href='/app/#{app.id}') #{app.name}
+    div.span6
+        div.offset1
+            h2 Create Application
+                div.well
+                    fieldset
+                        .control-group
+                            label.control-label Appication Name
+                        .controls
+                            input#appName(value="Sample")
+                    fieldset.control-group
+                        button.btn#createAppBtn Create
+            h2 or Select Existing One
+                .well
+                    ul.application-list
+                        each app in applications
+                            li
+                                a(href='/app/#{app.id}') #{app.name}
 script(type='text/javascript', src='/javascripts/app/views/index.view.js')

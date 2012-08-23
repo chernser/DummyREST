@@ -1,37 +1,37 @@
 
 div.row#sub_view
-  div.span10
-    h2 Socket.io Notification Configuration
-    a#notificationTestPageLink(href="#", target="new") Notifications Test Page
-    legend Notification Proxy function
-    div.form
-      div.control-group
-        div.controls
-          textarea.span5(rows = 7)#notifyProxyFunction
-          i.help-inline
-            |This function should return object with fields <b>'name'</b>, <b>'type'</b>, <b>'data'.</b><br>
-            |By default 'event' passed to function has correct 'name', 'type' fields<br>
-            |If message should be sent instead event, set event.type = 'msg'<br>
-          p#proxySimpleTestOutput
-      div.btn-group
-        button.btn#saveNotifyProxyFunction Save
-    br
-    legend Sending Custom Notifications
-    div#sendNotificationFormPlaceholder
-      h4 Start application to send notifications
-    div.form.hidden#sendNotificationForm
-      div.control-group
-        label
-          b Event name
-        div.controls
-          input#eventName(type="text", value="Test:Event")
-      div.control-group
-        label
-          b Data
-        div.controls
-          - var notifyData = { value: "test" }
-          textarea.span5(rows=7)#eventData!=JSON.stringify(notifyData, null, 4)
-      div.btn-group
-        button.btn#sendNotification Send
-      i#sendResult
-  script(type='text/javascript', src='/javascripts/app/views/app.notifications.view.js')
+    div.span10
+        h2 Socket.io Notification Configuration
+        a#notificationTestPageLink(href="#", target="new") Notifications Test Page
+        legend Notification Proxy function
+        div.form
+            div.control-group
+                div.controls
+                    textarea.span5(rows = 7)#notifyProxyFunction
+                    i.help-inline
+                        |This function should return object with fields <b>'name'</b>, <b>'type'</b>, <b>'data'.</b><br>
+                        |By default 'event' passed to function has correct 'name', 'type' fields<br>
+                        |If message should be sent instead event, set event.type = 'msg'<br>
+                    p#proxySimpleTestOutput
+            div.btn-group
+                button.btn#saveNotifyProxyFunction Save
+        br
+        legend Sending Custom Notifications
+        div#sendNotificationFormPlaceholder
+            h4 Start application to send notifications
+        div.form.hidden#sendNotificationForm
+            div.control-group
+                label
+                    b Event name
+                div.controls
+                    input#eventName(type="text", value="Test:Event")
+            div.control-group
+                label
+                    b Data
+                div.controls
+                    - var notifyData = { value: "test" }
+                    textarea.span5(rows=7)#eventData!=JSON.stringify(notifyData, null, 4)
+            div.btn-group
+                button.btn#sendNotification Send
+            i#sendResult
+    script(type='text/javascript', src='/javascripts/app/views/app.notifications.view.js')

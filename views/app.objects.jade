@@ -1,68 +1,68 @@
 
 div.row-fluid
-	div.span3.well
-		h4 Objects Types
-		div(style="min-height: 300px; max-height: 300px;overflow:auto;")
-			ul.nav.nav-list(style="height: 100%;")
-				each objtype in app.objtypes
-					li(class=(objtype.selected ? 'active': ''))
-						a.objtypelnk(href="#", obj=objtype.name) #{objtype.name}
-		div.btn-group
-			button.btn#newObjectType create
-			button.btn.btn-danger#deleteObjectType delete
-		div.form#newObjectFrm(style="margin-top: 0.8em;")
-			fieldset
-				label(for="objectName") Name
-					input(style="width:110px;")#newObjectTypeName(type="text") newObject
-			button.btn#createObjectType commit
+    div.span3.well
+        h4 Objects Types
+        div(style="min-height: 300px; max-height: 300px;overflow:auto;")
+            ul.nav.nav-list(style="height: 100%;")
+                each objtype in app.objtypes
+                    li(class=(objtype.selected ? 'active': ''))
+                        a.objtypelnk(href="#", obj=objtype.name) #{objtype.name}
+        div.btn-group
+            button.btn#newObjectType create
+            button.btn.btn-danger#deleteObjectType delete
+        div.form#newObjectFrm(style="margin-top: 0.8em;")
+            fieldset
+                label(for="objectName") Name
+                input(style="width:110px;")#newObjectTypeName(type="text") newObject
+            button.btn#createObjectType commit
 
-div.span9.tabbable
-	ul.nav.nav-tabs#tabNavigation
-		li.active
-			a(href="#instances", data-toggle="tab")
-				b Instances
-		li
-			a(href="#proxy_fun", data-toggle="tab")
-				b Logic
-		li
-			a(href="#routes", data-toggle="tab")
-				b Routes
-		div.tab-content
-			div.tab-pane.active#instances
-				div.row-fluid
-						div.form
-							div.control-group
-								div.controls
-									label(for="idField") Id field
-									select#idField
-					div.row-fluid
-						div.span7
-							table#objectInstances
-							div.btn-group(style="margin-top: 0.7em;")
-								button.btn#editObjectBtn edit
-								button.btn#removeObjectBtn remove
-								button.btn#touchObjectBtn touch
+    div.span9.tabbable
+        ul.nav.nav-tabs#tabNavigation
+            li.active
+                a(href="#instances", data-toggle="tab")
+                    b Instances
+            li
+                a(href="#proxy_fun", data-toggle="tab")
+                    b Logic
+            li
+                a(href="#routes", data-toggle="tab")
+                    b Routes
+        div.tab-content
+            div.tab-pane.active#instances
+                div.row-fluid
+                    div.form
+                        div.control-group
+                            div.controls
+                                label(for="idField") Id field
+                                select#idField
+                div.row-fluid
+                    div.span7
+                        table#objectInstances
+                        div.btn-group(style="margin-top: 0.7em;")
+                            button.btn#editObjectBtn edit
+                            button.btn#removeObjectBtn remove
+                            button.btn#touchObjectBtn touch
 
-							div.span7(style="margin-top: 1em; margin-left: 0;")
-								label Object Definition
-								textarea(rows="7",style="width: 400px")#objectInstanceJSON
-								div.btn-group
-									button.btn#createObjectInstance Create
-									button.btn#saveObjectInstance Save
-								span.inline-help(style="color: red;margin-left: 10px")#objectInstanceDefinitionError
-			div.tab-pane#proxy_fun
-				div.span7
-					div.form#objectTypeProxyCodeFrm
-						label(for="objectTypeProxyCode") Proxy function
-						div.controls
-							textarea(rows="10", style="width: 400px;")#objectTypeProxyCode
-						button.btn#saveProxyCode Save
-						span.inline-help(style="color: red;margin-left: 10px")#proxyCodeError
-			div.tab-pane#routes
-				div.span7
-					div.form
-						div.control-group
-							label(for="route_pattern") Route pattern
-							div.controls
-								input.input-large#routePattern[type=text]
-						button.btn#saveRoutePatternBtn Save
+                    div.span7(style="margin-top: 1em; margin-left: 0;")
+                        label Object Definition
+                        textarea(rows="7",style="width: 400px")#objectInstanceJSON
+                        div.btn-group
+                            button.btn#createObjectInstance Create
+                            button.btn#saveObjectInstance Save
+                        span.inline-help(style="color: red;margin-left: 10px")#objectInstanceDefinitionError
+            div.tab-pane#proxy_fun
+                div.span7
+                    div.form#objectTypeProxyCodeFrm
+                        label(for="objectTypeProxyCode") Proxy function
+                        div.controls
+                            textarea(rows="10", style="width: 400px;")#objectTypeProxyCode
+                        button.btn#saveProxyCode Save
+                        span.inline-help(style="color: red;margin-left: 10px")#proxyCodeError
+            div.tab-pane#routes
+                div.span7
+                    div.form
+                        div.control-group
+                            label(for="route_pattern") Route pattern
+                            div.controls
+                                input.input-large#routePattern[type=text]
+                        button.btn#saveRoutePatternBtn Save
