@@ -569,7 +569,7 @@ AppStorage.prototype = {
       } else {
         // Handle converting integer values
         var tmpId = parseInt(id);
-        if (isNan(tmpId)) {
+        if (tmpId === NaN) {
           query[id_field] = id;
         } else {
           query[id_field] = tmpId;
