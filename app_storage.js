@@ -102,7 +102,7 @@ function AppStorage(callback) {
     // authenticate if config.js has a username & password defined.
     // TODO: add logic to validate against 'undefined' and so-on.
     if(config.mongo.username !== '' && config.mongo.password !== '') {
-      this.db.authenticate(config.mongo.username, config.mongo.password, function(){
+      that.db.authenticate(config.mongo.username, config.mongo.password, function(){
 
         if (err !== null) {
           console.log("Db Error: ", err);
