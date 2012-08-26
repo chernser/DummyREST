@@ -1,4 +1,6 @@
-var app_storage = require('../app_storage.js')(function() { console.log("App Storage is ready"); });
+var app_storage = require('../app_storage.js')(function () {
+    console.log("App Storage is ready");
+});
 
 /*
  * GET home page.
@@ -35,3 +37,4 @@ exports.application = function(req, res) {
       sub_view: subject});
   });
 };
+

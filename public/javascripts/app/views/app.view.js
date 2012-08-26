@@ -40,6 +40,7 @@ require([
       });
 
 
+
       var objtypes = this.model.get('objtypes');
       if (this.model.has('objtypes') && objtypes.length > 0) {
         this.onObjectSelect(objtypes[0].name);
@@ -152,19 +153,24 @@ require([
     updateState:function () {
       $("#routesArePublished").attr("checked", this.model.get("routes_are_published") ? "checked" : null);
 
-      if (this.model.get('state') == 'started') {
-        $("#startAppBtn").attr("disabled", true);
-        $("#stopAppBtn").attr("disabled", false);
-        var api_location = "http://" + window.location.hostname + ":" + this.model.get('api_port') + "/api/";
-        debug(api_location);
-        var link = $("<a target='_blank'></a>").attr("href", api_location).text(api_location);
-        $("#rootAppApiLink").html(link);
-      } else {
-        $("#startAppBtn").attr("disabled", false);
-        $("#stopAppBtn").attr("disabled", true);
-        $("#rootAppApiLink").html("is not running");
-      }
-    },
+    $("#routesArePublished").attr("checked", this.model.get("routes_are_published") ? "checked" : null);
+    $("#appAccessToken").val(this.model.get('access_token'));
+
+    if (this.model.get('state') == 'started') {
+    $("#startAppBtn").attr("disabled", true);
+    $("#stopAppBtn").attr("disabled", false);
+    var api_location = "http://" + window.location.hostname + ":" + this.model.get('api_port') + "/api/";
+    var lnkText = api_location + '...';
+    api_location += '?access_token=' + this.model.get("access_token");
+    debug(api_location);
+    var link = $("<a target='_blank'></a>").attr("href", api_location).text(lnkText);
+    $("#rootAppApiLink").html(link);
+    } else {
+    $("#startAppBtn").attr("disabled", false);
+    $("#stopAppBtn").attr("disabled", true);
+    $("#rootAppApiLink").html("is not running");
+    }
+},
 
     setAppStateStarting:function (value, callback) {
 
@@ -473,6 +479,7 @@ require([
 
         error: function() {
           debug("Failed to delete object type");
+
         }
       });
     },

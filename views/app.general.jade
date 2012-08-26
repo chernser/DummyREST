@@ -1,1 +1,15 @@
 
+legend General Application Settings & Information
+
+div.form-horizontal
+    fieldset
+        div.control-group
+            label.control-label Access Token
+            div.controls
+                input.span3(type="text", value=app.access_token)#appAccessToken
+                button.btn#renewAccessTokenBtn get new&nbsp;
+                    i.icon-refresh
+                p.help-block
+                    i.icon-warning-sign
+                    b &nbsp;Update your client code after getting new token
+

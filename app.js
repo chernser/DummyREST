@@ -278,6 +278,19 @@ app.delete('/api/app/:id', function (req, res) {
 });
 
 
+app.post('/api/app/:id/access_token', function(req, res) {
+    console.log("Renewing application: ", req.params.id, " access token");
+
+    app_storage.renewAccessToken(req.params.id, function(err, new_token){
+        if (err != null)  {
+            res.send(500);
+        } else {
+            res.send({new_token: new_token});
+        }
+    });
+
+});
+
 // Object Types
 app.post('/api/app/:appId/objtype/', function (req, res) {
   console.log("Creating new object type: ", req.body, " for application ", req.params.appId);

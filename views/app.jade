@@ -11,6 +11,9 @@ div.span13
         div.span2
             div.well
                 ul.nav.nav-list
+                    li(class=(sub_view == 'general') ? 'active' : '')
+                        - var appLink = '/app/' + app.id + '/general/'
+                        a(href=appLink) General
                     li(class=(sub_view == 'objects') ? 'active' : '')
                         - var appLink = '/app/' + app.id + '/objects/'
                         a(href=appLink) Objects
@@ -33,7 +36,9 @@ div.span13
                         i.icon-white.icon-trash
                         | &nbsp;Delete Application
         div.span10
-            - if (sub_view == 'objects')
+            - if (sub_view == 'general')
+                include app.general.jade
+            - else if (sub_view == 'objects')
                 include app.objects.jade
             - else if (sub_view == 'testsuites')
                 include app.testsuites.jade
