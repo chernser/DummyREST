@@ -214,7 +214,6 @@ require([
             'click #newObjectType':'toggleNewObjectTypeForm',
             'click #cancelNewObjectType':'toggleNewObjectTypeForm',
             'click #createObjectType':'onCreateObjectType',
-            'click #deleteObjectType':'onDeleteObjectType',
             'click #addObjectBtn':'onAddObjectBtn',
             'click #saveObjectDefinition':'onSaveObjectDefinition',
             'click #saveProxyCode':'saveObjectTypeProxyCode',

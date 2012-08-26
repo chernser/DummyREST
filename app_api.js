@@ -110,19 +110,27 @@ AppApi.prototype.init = function () {
         }
     };
 
+    var ALLOWED_HEADERS = 'Content-Type, X-Parse-REST-API-Key, X-Parse-Application-Id, ' +
+                          'Access-Token';
 
     app.options('*', function (req, res) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Credentials', true);
         res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELTE, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, X-Parse-REST-API-Key, X-Parse-Application-Id');
+        res.header('Access-Control-Allow-Headers', ALLOWED_HEADERS);
 
         // TODO: move custom fields to configuration
 
         res.send(200);
     });
 
-    app.get('/api/', function (req, res) {
+    var authMiddleware = function(req, res, next) {
+        console.log(">> access_token: ", req.query.access_token);
+
+        next();
+    }
+
+    app.get('/api/', [authMiddleware], function (req, res) {
         app_storage.getApplication(app_id, function (application) {
 
             var api_def = {
