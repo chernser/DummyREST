@@ -1,6 +1,7 @@
 
-Project had been devided into two parts: 
-  DummyAPI-backend - server logic
+**Project had been devided into two parts**
+
+  DummyAPI-backend - server logic  
   DummyAPI-frontend - web ui 
 
 
