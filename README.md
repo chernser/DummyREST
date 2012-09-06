@@ -1,8 +1,9 @@
 
-    About
-This is simple mocking tool for easier REST like API development.
+Project had been devided into two parts: 
+  DummyAPI-backend - server logic
+  DummyAPI-frontend - web ui 
 
 
-    Requirements
+### Requirements
 Node.js
 MongoDb
